@@ -26,7 +26,13 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=0
+current_page=5
+FILE_NAME_0=1509;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fmaster%2FOSCserver.py;0;4
+FILE_NAME_1=602;Python;0;EUTF-8;1;1;0;%2Fhome%2FSonnenblumen%2FProgrammes%2FlibloClient.py;0;4
+FILE_NAME_2=167;Sh;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fmaster%2Fsetup.sh;0;4
+FILE_NAME_3=199;Sh;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fmaster%2FSTAtoAP;0;4
+FILE_NAME_4=932;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fmaster%2Fmain.py;0;4
+FILE_NAME_5=1455;Python;0;EUTF-8;1;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fmaster%2FmidiFile.py;0;4
 
 [VTE]
 last_dir=/home/Sonnenblumen

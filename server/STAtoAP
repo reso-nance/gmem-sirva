@@ -1,0 +1,102 @@
+#!/bin/bash
+# This script install and configure dsnmasq and hostapd to use wlan0 as an AP
+
+SSID=masterPi
+wifiPassword=bbqCvsN8
+
+
+if [[ $EUID -ne 0 ]]; then
+   echo "Are you root enough ?" 
+   exit 1
+fi
+
+echo "
+----- installing hostapd and dnsmasq -----"
+apt-get -y --fix-missing install dnsmasq hostapd || exit 1
+ systemctl stop dnsmasq
+ systemctl stop hostapd
+ 
+echo "
+----- configuring DHCP -----"
+ cp /etc/dhcpcd.conf /etc/dhcpcd.conf.orig
+ echo "interface wlan0" >> /etc/dhcpcd.conf
+ echo "static ip_address=10.0.0.1/24" >> /etc/dhcpcd.conf
+ service dhcpcd restart
+ echo"/etc/dhcpcd.conf:"
+ cat /etc/dhcpcd.conf
+ 
+echo "
+----- configuring dnsmasq -----"
+ mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig  
+ echo "interface=wlan0      # Use the require wireless interface - usually wlan0
+  dhcp-range=10.0.0.1,10.0.0.254,255.255.255.0,24h
+  dhcp-option=28,10.0.0.255 # set the broadcast address" > /etc/dnsmasq.conf
+  echo "/etc/dnsmasq.conf:"
+  cat /etc/dnsmasq.conf
+  
+echo "
+----- configuring hostapd -----"
+ echo "interface=wlan0" > /etc/hostapd/hostapd.conf
+ echo "driver=nl80211" >> /etc/hostapd/hostapd.conf
+ echo "ssid=$SSID" >> /etc/hostapd/hostapd.conf
+ echo "hw_mode=g" >> /etc/hostapd/hostapd.conf
+ echo "channel=4" >> /etc/hostapd/hostapd.conf
+ echo "wmm_enabled=0" >> /etc/hostapd/hostapd.conf
+ echo "macaddr_acl=0" >> /etc/hostapd/hostapd.conf
+ echo "auth_algs=1" >> /etc/hostapd/hostapd.conf
+ echo "ignore_broadcast_ssid=0" >> /etc/hostapd/hostapd.conf
+ echo "wpa=2" >> /etc/hostapd/hostapd.conf
+ echo "wpa_passphrase=$wifiPassword" >> /etc/hostapd/hostapd.conf
+ echo "wpa_key_mgmt=WPA-PSK" >> /etc/hostapd/hostapd.conf
+ echo "wpa_pairwise=TKIP" >> /etc/hostapd/hostapd.conf
+ echo "rsn_pairwise=CCMP" >> /etc/hostapd/hostapd.conf
+
+ cp /etc/default/hostapd /etc/default/hostapd.orig
+# replace DAEMON_CONF="" by DAEMON_CONF="/etc/hostapd/hostapd.conf"
+ sed -i -e 's/\#DAEMON_CONF\=\"\"/DAEMON_CONF\=\"\/etc\/hostapd\/hostapd.conf\"/g'  /etc/default/hostapd
+ echo "/etc/hostapd/hostapd.conf:"
+ cat /etc/hostapd/hostapd.conf
+
+echo "
+----- configuring IP forwarding -----"
+ if [ -f /etc/sysctl.conf ]; then cp /etc/sysctl.conf /etc/sysctl.conf.orig; fi
+# uncomment net.ipv4.ip_forward=1
+ sed -i -e 's/\#net.ipv4.ip_forward\=1/net.ipv4.ip_forward\=1/g'  /etc/sysctl.conf
+ iptables -t nat -A  POSTROUTING -o eth0 -j MASQUERADE
+# redirect port 8080 to port 80
+ #~ iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
+# same for localhost/loopback (not needed for now)
+# iptables -t nat -I OUTPUT -p tcp -d 127.0.0.1 --dport 80 -j REDIRECT --to-ports 8080
+ if [ -f /etc/iptables.ipv4.nat ]; then cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.orig; fi
+ sh -c "iptables-save > /etc/iptables.ipv4.nat"
+ echo "/etc/iptables.ipv4.nat:"
+ cat /etc/iptables.ipv4.nat
+
+ if [ -f /etc/rc.local ]; then cp /etc/rc.local /etc/rc.local.orig; fi
+#add "iptables-restore < /etc/iptables.ipv4.nat \n iwconfig wlan0 power off" before "exit 0" in /etc/rc.local 
+ sed -i -e '/#/! s/exit\ 0/iptables\-restore\ \<\ \/etc\/iptables.ipv4.nat\
+iw\ wlan0\ set\ power_save\ off\
+exit\ 0/g' /etc/rc.local
+echo "/etc/rc.local:"
+cat /etc/rc.local
+
+echo "setting hostname to $SSID"
+raspi-config nonint do_hostname "$SSID"
+
+echo "disabling ipv6 kernel module" 
+echo "blacklist ipv6
+" >> /etc/modprobe.d/ipv6.conf
+ 
+echo "
+----- quitting wpa_supplicant.service and launching hostapd & dnsmasq -----"
+ mv /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf.bak
+ systemctl stop wpa_supplicant.service
+ systemctl disable wpa_supplicant wpa_supplicant.service 
+ systemctl start hostapd
+ systemctl start dnsmasq
+ 
+echo "
+----------Done, rebooting in 5s----------
+"
+sleep 5
+reboot
