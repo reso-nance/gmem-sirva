@@ -11,7 +11,7 @@ replace_tabs=false
 
 [indentation]
 indent_width=4
-indent_type=1
+indent_type=0
 indent_hard_tab_width=8
 detect_indent=false
 detect_indent_width=false
@@ -20,19 +20,37 @@ indent_mode=2
 [project]
 name=gmem
 base_path=/home/Sonnenblumen/projets/Réso-nance/gmem-sirva
+description=
+file_patterns=
 
 [long line marker]
 long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=5
-FILE_NAME_0=1509;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fmaster%2FOSCserver.py;0;4
-FILE_NAME_1=602;Python;0;EUTF-8;1;1;0;%2Fhome%2FSonnenblumen%2FProgrammes%2FlibloClient.py;0;4
-FILE_NAME_2=167;Sh;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fmaster%2Fsetup.sh;0;4
-FILE_NAME_3=199;Sh;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fmaster%2FSTAtoAP;0;4
-FILE_NAME_4=932;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fmaster%2Fmain.py;0;4
-FILE_NAME_5=1455;Python;0;EUTF-8;1;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fmaster%2FmidiFile.py;0;4
+current_page=8
+FILE_NAME_0=0;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fserver%2FOSCserver.py;0;4
+FILE_NAME_1=436;Sh;0;EUTF-8;1;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fserver%2Fsetup.sh;0;4
+FILE_NAME_2=3220;Sh;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fserver%2FSTAtoAP;0;4
+FILE_NAME_3=58;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fserver%2Fmain.py;0;4
+FILE_NAME_4=1854;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fserver%2FmidiFile.py;0;4
+FILE_NAME_5=617;Sh;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2Fsetup.sh;0;4
+FILE_NAME_6=51;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2FOSCserver.py;0;4
+FILE_NAME_7=1959;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2Fsolenoid.py;0;4
+FILE_NAME_8=2589;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2FpeakDetector.py;0;4
+FILE_NAME_9=58;Python;0;EUTF-8;1;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2Fmain.py;0;4
 
 [VTE]
 last_dir=/home/Sonnenblumen
+
+[build-menu]
+EX_00_LB=_Execute
+EX_00_CM=sshpass -p raspberry scp "%f" pi@gmemClientTest.local:/home/pi/client && sshpass -p raspberry ssh -t pi@gmemclienttest.local python3 /home/pi/client/"%f"
+EX_00_WD=
+PythonFT_00_LB=_Compile
+PythonFT_00_CM=python -m py_compile "%f"
+PythonFT_00_WD=
+PythonFT_02_LB=_Lint
+PythonFT_02_CM=pep8 --max-line-length=80 "%f"
+PythonFT_02_WD=
+filetypes=Python;

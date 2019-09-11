@@ -28,7 +28,7 @@ import OSCserver
 midiToHostnames = "midi-hostnames.json"
 midiFolder = "./midiFiles"
 noteTranslator = None
-defaultNoteTranslator = {50:"test.local"} # 60 is middle C
+defaultNoteTranslator = {50:"gmemClientTest"} # 60 is middle C
 
 def exportToJson(data):
 	with open (midiToHostnames, "w") as f : json.dump(data, f)
@@ -52,8 +52,7 @@ def play(path, args, types, src):
 			for msg in mido.MidiFile(midiPath).play(): 
 				if msg.type == "note_on" :
 					if msg.note in noteTranslator :
-						print("coucou")
-						OSCserver.sendOSC(noteTranslator[msg.note], "solenoid", [msg.velocity])
+						OSCserver.sendOSC(noteTranslator[msg.note]+".local", "solenoid", [msg.velocity])
 	except KeyboardInterrupt : raise
 	except Exception as e : print(e)
 	
@@ -61,6 +60,7 @@ def play(path, args, types, src):
 def main(args):
     return 0
 
+
 if __name__ == '__main__':
-    import sys
-    sys.exit(main(sys.argv))
+    print("this file is made to be imported as a module, not executed")
+    raise SystemError
