@@ -18,7 +18,7 @@ apt-get update||exit 1
 apt-get -y dist-upgrade||exit 1
 echo "
 installing .deb packages :"
-apt-get -y --fix-missing install python3-pip python3-dev  python3-rpi.gpio liblo-dev libasound2-dev libjack-jackd2-dev libatlas-base-dev libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev||exit 1
+apt-get -y --fix-missing install python3-pip python3-dev  python3-rpi.gpio liblo-dev libasound2-dev libjack-jackd2-dev libatlas-base-dev libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev spidev||exit 1
 echo "
 installing pip packages :"
 pip3 install Cython||exit 2

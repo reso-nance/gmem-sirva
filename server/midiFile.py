@@ -28,7 +28,7 @@ import OSCserver
 midiToHostnames = "midi-hostnames.json"
 midiFolder = "./midiFiles"
 noteTranslator = None
-defaultNoteTranslator = {50:"gmemClientTest"} # 60 is middle C
+defaultNoteTranslator = {50:{"hostname":"gmemClientTest"} # 60 is middle C
 
 def exportToJson(data):
 	with open (midiToHostnames, "w") as f : json.dump(data, f)

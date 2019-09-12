@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-#  client/OSCserver.py
+#  OSCserver.py
 #  
 #  Copyright 2019 Unknown <Sonnenblumen@localhost.localdomain>
 #  
@@ -21,12 +21,21 @@
 #  MA 02110-1301, USA.
 #  
 #  
-import liblo
-import solenoid
 
-listenPort = 9000
-sendPort = 8000
+# ~ socket.gethostbyname('goosdfdsfdsfgle.com')
+# ~ Traceback (most recent call last):
+  # ~ File "<stdin>", line 1, in <module>
+# ~ socket.gaierror: [Errno -2] Name or service not known
+
+import liblo
+import midiFile
+
+listenPort = 8000
+sendPort = 9000
 server = None
+
+def main(args):
+    return 0
 
 def unknownOSC(path, args, types, src):
     print("got message '%s' from '%s'" % (path, src.url))
@@ -42,7 +51,7 @@ def listen():
         print(e)
         raise SystemError
         
-    server.add_method("/solenoid", None, solenoid.actuate)
+    server.add_method("/readMidi", None, midiFile.play)
     server.add_method("/readAudio", None, unknownOSC)
     server.add_method(None, None, unknownOSC)
     

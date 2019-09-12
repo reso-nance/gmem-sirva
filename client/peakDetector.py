@@ -21,7 +21,7 @@
 #  MA 02110-1301, USA.
 #  
 # 
-import pyaudio, time
+import pyaudio
 from datetime import datetime
 import numpy as np
 import RPi.GPIO as GPIO
@@ -29,35 +29,54 @@ import solenoid
 
 bitrate = pyaudio.paInt16
 sampleRate = 44100
-chunkSize = 512
+chunkSize = 512 # number of samples averaged
 threeshold = 1
 retrigger = 0.001 # in seconds, act as a debounce
 minDuration, maxDuration = 0.005, 0.1 # in seconds, exceeding 100ms for maxDuration may break the solenoid
 recoverTime = 0.3 # in seconds, when maxDuration has been reach, wait for this amount of time to avoid overheat
-p=pyaudio.PyAudio()
-stream=None
+p, stream = None, None
 solenoidPin = solenoid.pin
-
+ 
 def listen() :
-    global stream
+    global stream, p
+    
+    # Audio setup
+    p=pyaudio.PyAudio()
+    stream=p.open(format=bitrate,channels=1,rate=sampleRate,input=True, frames_per_buffer=chunkSize)
+    
+    # GPIO setup
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(solenoidPin, GPIO.OUT)
     GPIO.output(solenoidPin, GPIO.LOW)
-    stream=p.open(format=bitrate,channels=1,rate=sampleRate,input=True, frames_per_buffer=chunkSize)
+    
+    # SPI bus setup
+    spi = spidev.SpiDev()
+    spi.open(0,0)
+    spi.max_speed_hz=1000000
+    
     lastTrigger = datetime.now()
+    recovering = False
+    
     while True :
         try :
-            readPotentiometers()
+            readPotentiometers() # update threeshold and gain
+            # read a chunk inside a numpy array and average it's values
             data = np.fromstring(stream.read(chunkSize, exception_on_overflow = False),dtype=np.int16)
             peak=np.average(np.abs(data))*2
+            currentTime = datetime.now()
             if peak/chunkSize >= threeshold :
-                if not GPIO.input(solenoidPin) and (datetime.now() - lastTrigger).total_seconds() >= retrigger :
-                    lastTrigger = datetime.now()
+                # if the solenoid is inactive, activate it
+                if not GPIO.input(solenoidPin) and (currentTime - lastTrigger).total_seconds() >= retrigger and not recovering :
+                    lastTrigger = currentTime
                     GPIO.output(solenoidPin, GPIO.HIGH)
-                if GPIO.input(solenoidPin) and (datetime.now() - lastTrigger).total_seconds() >= maxDuration :
+                # if it has been fired for too long, shut it down to avoid overheating
+                if GPIO.input(solenoidPin) and (currentTime - lastTrigger).total_seconds() >= maxDuration :
                     GPIO.output(solenoidPin, GPIO.LOW)
-                    time.sleep(recoverTime)
-            else : GPIO.output(solenoidPin, GPIO.LOW)
+                    recovering = currentTime
+            # when the audio data get under the threeshold and the solenoid is out, power it down
+            elif GPIO.input(solenoidPin) : GPIO.output(solenoidPin, GPIO.LOW)
+            # reset the recovery period
+            elif recovering and (currentTime - recovering).total_seconds() > recoverTime : recovering = False
             # ~ print("threeshold = %02f" % (peak/chunkSize))
         except KeyboardInterrupt : return
 
@@ -66,9 +85,17 @@ def stopListening() :
     stream.close()
     p.terminate()
     
+# Function to read SPI data from MCP3008 chip
+def read3008Channel(channel):
+    assert channel in range(7)
+    adc = spi.xfer2([1,(8+channel)<<4,0])
+    data = ((adc[1]&3) << 8) + adc[2]
+    return data/1024
+    
 def readPotentiometers():
-    pass
-
+    ch0 = read3008Channel(0)
+    ch1 = read3008Channel(1)
+    return ch0, ch1
 
 if __name__ == '__main__':
     print("this file is made to be imported as a module, not executed")
