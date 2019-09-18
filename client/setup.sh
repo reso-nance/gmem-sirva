@@ -52,3 +52,11 @@ auth_alg=OPEN
 '>>/etc/wpa_supplicant/wpa_supplicant.conf
 echo "  setting hostname to $thisClientHostname..."
 raspi-config nonint do_hostname "$thisClientHostname"
+echo "
+------------------ enabling SPI :-------------------
+"
+raspi-config nonint do_i2c 0
+echo "
+-------------- DONE, leaving setup.sh---------------
+----------------------------------------------------
+"

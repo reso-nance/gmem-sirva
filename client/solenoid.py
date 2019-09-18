@@ -23,8 +23,8 @@
 #      -------------- Pinout --------------
 #            RPI
 #      pin 12 (GPIO18) ------> IRLZ34N gate
-#      pin 19 (GPIO10) ------> MCP3008 MOSI
-#      pin 21 (GPIO09) ------> MCP3008 MISO
+#      pin 19 (GPIO10) ------> MCP3008 MISO
+#      pin 21 (GPIO09) ------> MCP3008 MOSI
 #      pin 23 (GPIO11) ------> MCP3008 CLK
 #      pin 24 (GPIO08) ------> MCP3008 CS
 #  

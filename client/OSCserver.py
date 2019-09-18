@@ -27,6 +27,7 @@ import solenoid
 listenPort = 9000
 sendPort = 8000
 server = None
+runServer = True
 
 def unknownOSC(path, args, types, src):
     print("got message '%s' from '%s'" % (path, src.url))
@@ -46,8 +47,9 @@ def listen():
     server.add_method("/readAudio", None, unknownOSC)
     server.add_method(None, None, unknownOSC)
     
-    while True : 
+    while runServer : 
         server.recv(100)
+    print("  OSC server has closed")
 
 def sendOSC(IPaddress, command, args):
     print("sending OSC {} {} to {}".format(command, args, IPaddress))

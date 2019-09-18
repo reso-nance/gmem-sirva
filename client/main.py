@@ -33,11 +33,12 @@ peakDetectorThread = None
 def exitCleanly():
     if oscServerThread : 
         print("closing the OSC server")
-        oscServerThread.stop()
+        OSCserver.runServer = False
+        oscServerThread.join()
     if peakDetector :
         print("closing the peak detector")
+        peakDetector.isListening = False
         peakDetector.stopListening()
-        peakDetectorThread.stop()
     raise SystemExit
 
 if __name__ == '__main__':
