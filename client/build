@@ -1,0 +1,22 @@
+#!/bin/bash
+# This script compiles python source to binaries for the raspberry pi clients
+
+echo "-----------------------------------------------------------------"
+echo "     beginning compilation, please grab a cup of coffee"
+echo "-----------------------------------------------------------------
+"
+mkdir -p build build_tmp >/dev/null
+rm -r ./build/* build_tmp/* >/dev/null
+if python3 compile.py build_ext --build-lib ./build/ --build-temp ./build_tmp
+   then
+      echo "-----------------------------------------------------------------"
+      echo "        finished compiling, copying static files"
+      rm -r build_tmp
+      rm ./*.c
+      rm ./*.pyc
+      mv build/*.so ./
+      rm -r build
+      
+fi
+echo "--------------- DONE, congratulations ----------------
+"

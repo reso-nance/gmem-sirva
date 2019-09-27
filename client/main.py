@@ -25,10 +25,11 @@
 from threading import Thread
 from time import sleep
 import signal
-import OSCserver, peakDetector
+import OSCserver, peakDetector, audio
 
 oscServerThread = None
 peakDetectorThread = None
+JACKconnectionThread = None
 
 def exitCleanly():
     if oscServerThread : 
@@ -49,6 +50,10 @@ if __name__ == '__main__':
     print("starting the audio peak detector...")
     peakDetectorThread = Thread(target=peakDetector.listen)
     peakDetectorThread.start()
+    print("starting the JACK connection thread...")
+    JACKconnectionThread = Thread(target=audio.init)
+    JACKconnectionThread.start()
+    
     
     while True :
         try : sleep(1)
