@@ -5,18 +5,21 @@ echo "-----------------------------------------------------------------"
 echo "     beginning compilation, please grab a cup of coffee"
 echo "-----------------------------------------------------------------
 "
-mkdir -p build build_tmp >/dev/null
-rm -r ./build/* build_tmp/* >/dev/null
-if python3 compile.py build_ext --build-lib ./build/ --build-temp ./build_tmp
+mkdir -p lib build_tmp >/dev/null
+rm -r ./lib/* build_tmp/* >/dev/null
+
+if python3 compile.py build_ext --build-lib ./lib/ --build-temp ./build_tmp
    then
       echo "-----------------------------------------------------------------"
-      echo "        finished compiling, copying static files"
+      echo "        FINISHED compiling, copying static files"
       rm -r build_tmp
       rm ./*.c
-      rm ./*.pyc
-      mv build/*.so ./
-      rm -r build
-      
+      mv lib/*.so ./
+      rm -r lib
+    else
+      echo "-----------------------------------------------------------------"
+      echo "    compilation FAILED, please reconsider your life choices"
+    
 fi
-echo "--------------- DONE, congratulations ----------------
+echo "--------------------------  DONE  -------------------------------
 "

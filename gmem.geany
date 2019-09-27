@@ -28,18 +28,21 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=10
+current_page=12
 FILE_NAME_0=1013;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fserver%2FOSCserver.py;0;4
 FILE_NAME_1=436;Sh;0;EUTF-8;1;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fserver%2Fsetup.sh;0;4
 FILE_NAME_2=3220;Sh;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fserver%2FSTAtoAP;0;4
 FILE_NAME_3=58;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fserver%2Fmain.py;0;4
 FILE_NAME_4=1051;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fserver%2FmidiFile.py;0;4
-FILE_NAME_5=2123;Sh;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2Fsetup.sh;0;4
-FILE_NAME_6=1514;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2Fmain.py;0;4
-FILE_NAME_7=0;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2FOSCserver.py;0;4
-FILE_NAME_8=1846;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2Fsolenoid.py;0;4
-FILE_NAME_9=4529;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2FpeakDetector.py;0;4
-FILE_NAME_10=3977;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2Faudio.py;0;4
+FILE_NAME_5=1269;Sh;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2Fsetup.sh;0;4
+FILE_NAME_6=11;Sh;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2Fbuild;0;4
+FILE_NAME_7=1903;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2Fmain.py;0;4
+FILE_NAME_8=0;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2FOSCserver.py;0;4
+FILE_NAME_9=2257;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2Fsolenoid.py;0;4
+FILE_NAME_10=4529;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2FpeakDetector.py;0;4
+FILE_NAME_11=4886;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2Faudio.py;0;4
+FILE_NAME_12=1176;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2FTéléchargements%2Fplay_file.py;0;4
+FILE_NAME_13=502;Python;0;EUTF-8;0;1;0;%2Fhome%2FSonnenblumen%2Fprojets%2FRéso-nance%2Fgmem-sirva%2Fclient%2Fcompile.py;0;4
 
 [VTE]
 last_dir=/home/Sonnenblumen

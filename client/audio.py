@@ -27,18 +27,24 @@
 # jackd -P70 -p16 -t2000 -dalsa -dhw:U192k -p128 -n3 -r96000 -s
 
 # ~ import sys, signal, os, jack, threading, subprocess
-import jack, threading, subprocess, time
+import jack, threading, subprocess, time, queue
+from datetime import datetime
+import soundfile as sf
 
 soundcardName = "U192k" # soundcard name in ALSA, as listed by aplay -l
-client, event, jackServerThread = None, None, None
+client, event, jackServerThread, connections = None, None, None, None
 clientStarted = False
+xrunCounter = 0
+startTime = datetime.now()
 
-def init(soundcard=soundcardName, sampleRate=48000, bufferSize=128,
+# ~ def init(soundcard=soundcardName, sampleRate=96000, bufferSize=128,
+         # ~ bufferCount=3, priority=70, timeout=2000, maxClients=16):
+def init(soundcard=soundcardName, sampleRate=96000, bufferSize=256,
          bufferCount=3, priority=70, timeout=2000, maxClients=16):
     global client, event, jackServerThread, clientStarted
     # launching jack server
-    # ~ jackServerCmd = "jackd --realtime -P{} -p{} -t{} -dalsa -dhw:{} -p{} -n{} -r{} -s &".format(priority, maxClients, timeout,soundcard, bufferSize, bufferCount, sampleRate)
-    jackServerCmd = "jackd --realtime -p{} -t{} -dalsa -dhw:{} -p{} -n{} -r{} -s --hwmon &".format(maxClients, timeout,soundcard, bufferSize, bufferCount, sampleRate)
+    jackServerCmd = "jackd --realtime -P{} -p{} -t{} -dalsa -dhw:{} -p{} -n{} -r{} &".format(priority, maxClients, timeout,soundcard, bufferSize, bufferCount, sampleRate)
+    # ~ jackServerCmd = "jackd --realtime -dalsa -D -dhw:{} -p{} -n{} -r{} --hwmon  &".format(soundcard, bufferSize, bufferCount, sampleRate)
     print("starting JACK server ...")
     for i in range(3):
         jackServerThread = subprocess.Popen(jackServerCmd, shell=True)
@@ -55,25 +61,15 @@ def init(soundcard=soundcardName, sampleRate=48000, bufferSize=128,
     if client.status.server_started: print("connected to JACK server")
     if client.status.name_not_unique: print('unique name {0!r} assigned'.format(client.name))
     event = threading.Event()
+    client.set_xrun_callback(xrun_callback)
+    client.set_shutdown_callback(shutdown_callback)
+    client.set_process_callback(processRouting_callback)
     # create two port pairs
     # ~ client.outports.register("micInput")
     # ~ client.outports.register("analogInput")
     # ~ client.inports.register("transducerOutput")
     # ~ client.inports.register("analogOutput")
     # ~ print("  4 IOs registered")
-    @client.set_process_callback
-    def process(frames):
-        assert len(client.inports) == len(client.outports)
-        assert frames == client.blocksize
-        for i, o in zip(client.inports, client.outports):
-            o.get_buffer()[:] = i.get_buffer()
-
-    @client.set_shutdown_callback
-    def shutdown(status, reason):
-        print('JACK shutdown!')
-        print('  status:', status)
-        print('  reason:', reason)
-        event.set()
     client.activate()
     with client : 
         assert len(client.get_ports(is_physical=True, is_output=True)) >= 2
@@ -91,42 +87,30 @@ def connect():
          client.connect("system:capture_2","system:playback_2")
          return True
     else : return False
+    
+def xrun_callback(delayedMicros):
+    global xrunCounter
+    xrunCounter+=1
+    runningSince = datetime.now() - startTime
+    print("total xruns : %i in %s (delay of %i microseconds) " %(xrunCounter, str(runningSince), int(delayedMicros)))
 
-def fixme() :
-    global client
-    with client:
-        # When entering this with-statement, client.activate() is called.
-        # This tells the JACK server that we are ready to roll.
-        # Our process() callback will start running now.
+def shutdown_callback(status, reason):
+    global event
+    print('JACK shutdown!')
+    print('  status:', status)
+    print('  reason:', reason)
+    event.set()
 
-        # Connect the ports.  You can't do this before the client is activated,
-        # because we can't make connections to clients that aren't running.
-        # Note the confusing (but necessary) orientation of the driver backend
-        # ports: playback ports are "input" to the backend, and capture ports
-        # are "output" from it.
-        capture = client.get_ports(is_physical=True, is_output=True)
-        if not capture:
-            raise RuntimeError('No physical capture ports')
+def processRouting_callback(frames):
+        assert len(client.inports) == len(client.outports)
+        assert frames == client.blocksize
+        for i, o in zip(client.inports, client.outports):
+            o.get_buffer()[:] = i.get_buffer()
 
-        for src, dest in zip(capture, client.inports):
-            client.connect(src, dest)
-
-        playback = client.get_ports(is_physical=True, is_input=True)
-        if not playback:
-            raise RuntimeError('No physical playback ports')
-
-        for src, dest in zip(client.outports, playback):
-            client.connect(src, dest)
-
-        print('Press Ctrl+C to stop')
-        try:
-            event.wait()
-        except KeyboardInterrupt:
-            print('\nInterrupted by user')
-    # When the above with-statement is left (either because the end of the
-    # code block is reached, or because an exception was raised inside),
-    # client.deactivate() and client.close() are called automatically.
-
+def playFile(filePath, output=1):
+    cmd="JACK_PLAY_CONNECT_TO=system:playback_%i jack-play %s" % (output, filePath)
+    subprocess.Popen(cmd, shell=True)
+    
 def close():
      client.deactivate()
      subprocess.Popen("pkill jackd", shell=True)
