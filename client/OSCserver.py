@@ -22,7 +22,7 @@
 #  
 #  
 import liblo
-import solenoid
+import solenoid, audio
 
 listenPort = 9000
 sendPort = 8000
@@ -43,8 +43,13 @@ def listen():
         print(e)
         raise SystemError
         
-    server.add_method("/solenoid", None, solenoid.actuate)
-    server.add_method("/readAudio", None, unknownOSC)
+    server.add_method("/solenoid", None, solenoid.actuate) # ex1 : /solenoid | ex2 : /solenoid 50 (pulse duration in ms)
+    server.add_method("/play", None, audio.playFile) # ex : /readAudio myfile.wav [transducer] : if no output is named, defaults to transducer
+    server.add_method("/connect", None, audio.connect) # ex : /connect analogIN analogOUT
+    server.add_method("/mute", None, audio.mute) # ex : /mute analogOUT
+    server.add_method("/unmute", None, audio.mute) # ex : /unmute analogOUT
+    server.add_method("/toggle", None, audio.mute) # ex : /toggle analogOUT
+    server.add_method("/volume", None, audio.setVolume) # ex : /volume analogOUT 96
     server.add_method(None, None, unknownOSC)
     
     while runServer : 

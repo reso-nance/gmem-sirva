@@ -1,0 +1,42 @@
+Les arguments notés [entre crochets] sont facultatifs, les types OSC sont notés entre parenthèses
+
+Côté serveur :
+
+Côté client :
+Le client peut-être directement contacté par son nom d'hôte au sein du réseau wifi.
+Par exemple, pour un client nommé "bidule", les messages OSC peuvent être envoyés à "bidule.local" au lieu de "192.168.0.24"
+
+/solenoid : pulse le solénoide une fois
+         (int) [durée] : durée d'activation du solénoïde en ms. Limitée en interne pour éviter la surchauffe du solénoïde
+          ex : /solenoid 50
+
+/play : lit un fichier audio stocké dans le client
+          (str) nomDuFichier : nom du fichier sans le chemin complet, ex: groovyTune.wav (peut contenir des espaces, caractères accentués...)
+          (str) [sortie audio] : sortie utilisée pour lire le fichier son, par défaut celle du transducteur. Peut être soit "transducer" soit "analogOUT", sensible à la casse
+          (str) [sortie audio2] : seconde sortie utilisée pour lire le fichier son simultanément. Peut être soit "transducer" soit "analogOUT", sensible à la casse
+           ex : /play groovyTune.wav analogOUT
+
+/connect : connecte une entrée audio à une sortie audio
+        (str) nomDeLentrée : peut être soit "microphone" soit "analogIN", sensible à la casse
+        (str) nomDeLaSortie : peut être soit "transducer" soit "analogOUT", sensible à la casse
+         ex : /connect microphone transducer
+
+/mute : coupe le son de l'entrée ou la sortie sélectionnée
+     (str) nom : peut être "microphone", "analogIN", "transducer", "analogOUT", sensible à la casse
+     (str) [nom] : idem, permet de muter plusieurs canaux en même temps
+      ex : /mute analogOUT transducer
+
+/unmute : rétablit le son de l'entrée ou la sortie sélectionnée
+       (str) nom : peut être "microphone", "analogIN", "transducer", "analogOUT", sensible à la casse
+       (str) [nom] : idem, permet de dé-muter plusieurs canaux en même temps
+        ex : /unmute analogOUT
+
+/toggle : inverse l'état du mute de l'entrée ou la sortie sélectionnée
+           (str) nom : peut être "microphone", "analogIN", "transducer", "analogOUT", sensible à la casse
+           (str) [nom] : idem, permet de basculer le mute de plusieurs canaux en même temps
+            ex : /toggle analogOUT
+
+/volume : règle le volume de la sortie sélectionnée 
+        (str) nomDeLaSortie : peut être soit "transducer" soit "analogOUT", sensible à la casse
+        (int) volume 0~100 : inaudible à 0%, plein volume à 100%, courbe logarithmique.
+         ex : /volume analogOUT 87

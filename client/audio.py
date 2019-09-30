@@ -33,14 +33,18 @@ import soundfile as sf
 
 soundcardName = "U192k" # soundcard name in ALSA, as listed by aplay -l
 client, event, jackServerThread, connections = None, None, None, None
+alsaIndex = None
 clientStarted = False
 xrunCounter = 0
 startTime = datetime.now()
+inputs = {"microphone":"system:capture_1", "analogIN": "system:capture_2"}
+outputs = {"transducer":"system:playback_1", "analogOUT":"system:playback_2"}
+alsaControls = {"microphone": "'Mic',0", "analogIN":"'Mic',1", "transducer":"'UMC202HD 192k Output',0", "analogOUT":"'UMC202HD 192k Output',1"}
 
-# ~ def init(soundcard=soundcardName, sampleRate=96000, bufferSize=128,
-         # ~ bufferCount=3, priority=70, timeout=2000, maxClients=16):
-def init(soundcard=soundcardName, sampleRate=96000, bufferSize=256,
-         bufferCount=3, priority=70, timeout=2000, maxClients=16):
+# ~ def init(soundcard=soundcardName, sampleRate=96000, bufferSize=64,
+         # ~ bufferCount=4, priority=70, timeout=2000, maxClients=16):
+def init(soundcard=soundcardName, sampleRate=48000, bufferSize=1024,
+         bufferCount=4, priority=70, timeout=2000, maxClients=16):
     global client, event, jackServerThread, clientStarted
     # launching jack server
     jackServerCmd = "jackd --realtime -P{} -p{} -t{} -dalsa -dhw:{} -p{} -n{} -r{} &".format(priority, maxClients, timeout,soundcard, bufferSize, bufferCount, sampleRate)
@@ -81,11 +85,18 @@ def init(soundcard=soundcardName, sampleRate=96000, bufferSize=256,
         event.wait()
         # ~ close()
     
-def connect():
+# ~ def connect():
+    # ~ if clientStarted :
+         # ~ client.connect("system:capture_1","system:playback_1")
+         # ~ client.connect("system:capture_2","system:playback_2")
+         # ~ return True
+    # ~ else : return False
+    
+def connect(input, output):
+    assert input in inputs and output in outputs
     if clientStarted :
-         client.connect("system:capture_1","system:playback_1")
-         client.connect("system:capture_2","system:playback_2")
-         return True
+        client.connect(inputs[input], outputs[output])
+        return True
     else : return False
     
 def xrun_callback(delayedMicros):
@@ -107,10 +118,42 @@ def processRouting_callback(frames):
         for i, o in zip(client.inports, client.outports):
             o.get_buffer()[:] = i.get_buffer()
 
-def playFile(filePath, output=1):
-    cmd="JACK_PLAY_CONNECT_TO=system:playback_%i jack-play %s" % (output, filePath)
+def playFile(fileName, output=outputs["transducer"], output2 = None):
+    assert output in outputs
+    if output2 and output2 != output: 
+        assert output2 in outputs
+        cmd = "JACK_PLAY_CONNECT_TO=system:playback_%d jack-play " + fileName
+    else : cmd="JACK_PLAY_CONNECT_TO=%s jack-play %s" % (outputs[output], fileName)
     subprocess.Popen(cmd, shell=True)
-    
+
+def mute(OSCaddress, channels) :
+    for channel in channels :
+        OSCaddress = OSCaddress.replace("/","")
+        assert channel in alsaControls
+        assert OSCaddress in ("mute", "unmute", "toggle")
+        if channel in ("microphone", "analogIN") and OSCaddress is not "toggle" :
+            if OSCaddress == "mute" : OSCaddress = "nocap" # inputs doesn't have a mute parameter in alsa but a cap/nocap. Toggle works just fine
+            elif OSCaddress == "unmute" : OSCaddress = "cap"
+        cmd = "amixer -Dhw:%s -q set %s %s" % (soundcardName, alsaControls[channel], OSCaddress)
+        subprocess.Popen(cmd, shell=True)
+
+def setVolume(OSCaddress, OSCargs):
+    print(OSCaddress, OSCargs)
+    channel, volume = OSCargs
+    assert channel in alsaControls
+    assert volume in range(101)
+    cmd = "amixer -Dhw:{} -q set {} {}%".format(soundcardName, alsaControls[channel], volume)
+    subprocess.Popen(cmd, shell=True)
+
+def getAlsaIndex(soundcardName):
+    info = subprocess.check_output(["aplay", "-l"]).decode("utf-8")
+    for line in info.splitlines() :
+        if line.count(soundcardName) :
+            ALSAindex = (line.split("card "))[1].split(": Device")[0]
+            ALSAindex = int(ALSAindex)
+            return ALSAindex
+    raise SystemError(info + "\nSoundcard not found in ALSA devices")
+
 def close():
      client.deactivate()
      subprocess.Popen("pkill jackd", shell=True)

@@ -24,7 +24,7 @@
 
 from threading import Thread
 from time import sleep
-import signal
+import signal, subprocess
 import OSCserver, peakDetector, audio
 
 oscServerThread = None
@@ -40,6 +40,9 @@ def exitCleanly():
         print("closing the peak detector")
         peakDetector.isListening = False
         peakDetector.stopListening()
+    print("killing jackd ...")
+    subprocess.Popen("pkill jackd", shell=True)
+    
     raise SystemExit
 
 if __name__ == '__main__':
