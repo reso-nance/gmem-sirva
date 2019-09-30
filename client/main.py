@@ -40,8 +40,8 @@ def exitCleanly():
         print("closing the peak detector")
         peakDetector.isListening = False
         peakDetector.stopListening()
-    print("killing jackd ...")
-    subprocess.Popen("pkill jackd", shell=True)
+    print("exiting jack client ...")
+    audio.close()
     
     raise SystemExit
 

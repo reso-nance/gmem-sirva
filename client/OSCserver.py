@@ -30,7 +30,7 @@ server = None
 runServer = True
 
 def unknownOSC(path, args, types, src):
-    print("got message '%s' from '%s'" % (path, src.url))
+    print("got unknown message '%s' from '%s'" % (path, src.url))
     for a, t in zip(args, types):
         print ("  argument of type '%s': %s" % (t, a))
 
@@ -45,7 +45,7 @@ def listen():
         
     server.add_method("/solenoid", None, solenoid.actuate) # ex1 : /solenoid | ex2 : /solenoid 50 (pulse duration in ms)
     server.add_method("/play", None, audio.playFile) # ex : /readAudio myfile.wav [transducer] : if no output is named, defaults to transducer
-    server.add_method("/connect", None, audio.connect) # ex : /connect analogIN analogOUT
+    server.add_method("/route", None, audio.route) # ex : /route analogIN analogOUT
     server.add_method("/mute", None, audio.mute) # ex : /mute analogOUT
     server.add_method("/unmute", None, audio.mute) # ex : /unmute analogOUT
     server.add_method("/toggle", None, audio.mute) # ex : /toggle analogOUT

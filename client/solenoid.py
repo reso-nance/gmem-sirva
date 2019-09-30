@@ -37,7 +37,7 @@ from datetime import datetime
 pin = 12
 durationMin, durationMax = 10, 100 # in ms
 retrigger = 0.1 # in ms, act as a debounce
-recoverTime = 200 # in ms, when maxDuration has been reach, wait for this amount of time to avoid overheat
+recoverTime = 200 # in ms, when maxDuration has been reached, wait for this amount of time to avoid overheat
 
 # GPIO setup
 GPIO.setmode(GPIO.BOARD)
@@ -53,7 +53,6 @@ def setGPIOhigh(duration) :
     return
     
 def actuate(duration=durationMax):
-    print("incoming osc :",duration)
     try : duration = int(duration)
     except ValueError : 
         try : duration = float(duration)

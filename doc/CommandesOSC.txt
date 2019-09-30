@@ -16,10 +16,10 @@ Par exemple, pour un client nommé "bidule", les messages OSC peuvent être envo
           (str) [sortie audio2] : seconde sortie utilisée pour lire le fichier son simultanément. Peut être soit "transducer" soit "analogOUT", sensible à la casse
            ex : /play groovyTune.wav analogOUT
 
-/connect : connecte une entrée audio à une sortie audio
+/route : connecte une entrée audio à une sortie audio
         (str) nomDeLentrée : peut être soit "microphone" soit "analogIN", sensible à la casse
         (str) nomDeLaSortie : peut être soit "transducer" soit "analogOUT", sensible à la casse
-         ex : /connect microphone transducer
+         ex : /route microphone transducer
 
 /mute : coupe le son de l'entrée ou la sortie sélectionnée
      (str) nom : peut être "microphone", "analogIN", "transducer", "analogOUT", sensible à la casse
