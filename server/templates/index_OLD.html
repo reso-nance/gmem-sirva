@@ -1,0 +1,207 @@
+{% include 'header.min.html' %}
+
+<script type="text/javascript" charset="utf-8">
+    
+    $(document).ready(function() {
+        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + '/home')  
+        
+        $("#sidebar").mCustomScrollbar({theme: "minimal"});
+        //~ $("#sidebarCollapse").on("click", function () {
+            //~ $("#sidebar, #content").toggleClass("active");
+            //~ $(".collapse.in").toggleClass("in");
+            //~ $("a[aria-expanded=true]").attr("aria-expanded", "false");
+        //~ });
+        
+    });
+    
+    </script>
+    
+    <link href="static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/css/custom.min.css" rel="stylesheet">
+    <link href="static/css/sidebar.min.css" rel="stylesheet">
+</head>
+
+<body style="background:#222;">
+    
+    <div class="container text-center vertical-align">
+        {% with messages = get_flashed_messages() %}
+           {% if messages %}
+              {% for message in messages %}
+                 {{ message }}
+              {% endfor %}
+           {% endif %}
+        {% endwith %}
+    </div>
+
+ <div class="wrapper">
+        <!-- Sidebar  -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h3>Appareils</h3>
+            </div>
+
+            <ul class="list-unstyled components">
+<!--
+                <li class="active">
+                    <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle">Home</a>
+                    <ul class="collapse list-unstyled" id="homeSubmenu">
+                        <li>
+                            <a href="#">exemple 1</a>
+                        </li>
+                        <li>
+                            <a href="#">exemple 2</a>
+                        </li>
+                        <li>
+                            <a href="#">exemple 3</a>
+                        </li>
+                    </ul>
+                </li>
+-->
+                <li>
+                    <a href="#">le Doughnut</a>
+                </li>
+                <li>
+                    <a href="#">Exemple 2</a>
+                </li>
+                <li>
+                    <a href="#">Exemple 3</a>
+                </li>
+            </ul>
+
+            <ul class="list-unstyled CTAs">
+                <li>
+                    <a href="https://bootstrapious.com/tutorial/files/sidebar.zip" class="download">téléchargement</a>
+                </li>
+                <li>
+                    <a href="https://bootstrapious.com/p/bootstrap-sidebar" class="article">éteindre le serveur</a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Page Content  -->
+        <div id="content">
+            <div class="d-flex flex-row justify-content-around"><h2 class="pb-5">le Doughnut</h2></div>
+            <div class="d-flex flex-row justify-content-around">
+                <div class="d-flex flex-column justify-content-around">
+                  <div class="p-2">
+                      <h4>
+                          <p>IP : 10.0.0.XX</p>
+                          <p>en ligne depuis 10/10/2019 : 17:16:32</p>
+                          <p>note midi : C4 (59)</p>
+                          <p class="justify-content-around">
+                              <button type="button" class="btn btn-light">charger fichier</button>
+                              <button type="button" class="btn btn-warning">solénoïde</button>
+                              <button type="button" class="btn btn-danger">éteindre</button>
+                          </p>
+                      </h4>
+                  </div>
+                </div>
+                <div class="d-flex flex-column justify-content-around">
+                  <span class="pb-3"><img src="static/test.png"/></span>
+                </div>
+          </div>
+         <div class="d-flex flex-row pt-5 justify-content-center"> <h2>fichiers audio</h2></div>
+         <div class="d-flex flex-row pt-2">
+             <ul class="list-group" style="width:100%"> 
+                <li class="list-group-item d-flex justify-content-center">
+                    <p class="px-3 m-0 flex-grow-1">fichier 1.wav</p> 
+                    <button class="btn-danger">x</button>
+                </li>
+                <li class="list-group-item d-flex justify-content-center">
+                    <p class="px-3 m-0 flex-grow-1">fichier 2.wav</p> 
+                    <button class="btn-danger">x</button>
+                </li>
+                <li class="list-group-item d-flex justify-content-center">
+                    <p class="px-3 m-0 flex-grow-1">fichier 3.wav</p> 
+                    <button class="btn-danger">x</button>
+                </li>
+                <li class="list-group-item d-flex justify-content-center">
+                    <p class="px-3 m-0 flex-grow-1">fichier 4.wav</p> 
+                    <button class="btn-danger">x</button>
+                </li>
+                <li class="list-group-item d-flex justify-content-center">
+                    <p class="px-3 m-0 flex-grow-1">fichier 5.wav</p> 
+                    <button class="btn-danger">x</button>
+                </li>
+            </ul>
+        </div>
+         <div class="d-flex flex-row pt-2">
+             <ul class="list-group" style="width:100%"> 
+                <li class="list-group-item d-flex justify-content-center">
+                    <p class="px-3 m-0 flex-grow-1">fichier 6.wav</p> 
+                    <button class="btn-danger">x</button>
+                </li>
+                <li class="list-group-item d-flex justify-content-center">
+                    <p class="px-3 m-0 flex-grow-1">fichier 7.wav</p> 
+                    <button class="btn-danger">x</button>
+                </li>
+                <li class="list-group-item d-flex justify-content-center">
+                    <p class="px-3 m-0 flex-grow-1">fichier 8.wav</p> 
+                    <button class="btn-danger">x</button>
+                </li>
+                <li class="list-group-item d-flex justify-content-center">
+                    <p class="px-3 m-0 flex-grow-1">fichier 9.wav</p> 
+                    <button class="btn-danger">x</button>
+                </li>
+                <li class="list-group-item d-flex justify-content-center">
+                    <p class="px-3 m-0 flex-grow-1">fichier 10.wav</p> 
+                    <button class="btn-danger">x</button>
+                </li>
+            </ul>
+        </div>
+<!--
+            <ul class="list-group">
+              <li class="list-group-item">fichier1.wav <button type="button" class="btn btn-danger">x</button></li>
+              <li class="list-group-item">fichier2.wav <button type="button" class="btn btn-danger">x</button></li>
+              <li class="list-group-item">fichier3.wav <button type="button" class="btn btn-danger">x</button></li>
+              <li class="list-group-item">fichier4.wav <button type="button" class="btn btn-danger">x</button></li>
+              <li class="list-group-item">fichier5.wav <button type="button" class="btn btn-danger">x</button></li>
+            </ul>
+-->
+        
+        </div>
+    </div>
+
+
+<!--
+
+<div class="modal fade" id="modal0" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body" style="background:#222;">
+                <div class="nav flex-column nav-pills pill-1">
+                    <div id="modalContent0"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+-->
+            
+</body>
+<style>
+    .full-width-image {
+       width: 100vw;
+       position: relative;
+       left: 50%;  
+       margin-left: -50vw;
+    }
+
+    .full-width-image img {
+      height: 100%;
+}
+    html,body {
+      height:100%;
+      margin:0;
+    }
+    .slidecontainer{
+		margin:30px;
+	}
+    #content {
+        color:white;
+    }
+    .list-group-item {
+        background-color : #222;
+    }
+</style>
+</html>

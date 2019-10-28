@@ -3,7 +3,7 @@
 #
 #  server/main.py
 #  
-#  Copyright 2019 Unknown <Sonnenblumen@localhost.localdomain>
+#  Copyright 2019 Reso-nance Numérique <laurent@reso-nance.org>
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -23,10 +23,21 @@
 #  
 
 from threading import Thread
-import OSCserver
+import eventlet
+import OSCserver, UI, clients
+
+flaskBind = "10.0.0.1"
+HTTPlisteningPort = 8080
 
 oscServerThread = None
 
 if __name__ == '__main__':
+    # ~ eventlet.spawn(OSCserver.listen)
     oscServerThread = Thread(target=OSCserver.listen)
     oscServerThread.start()
+    print("reading known clients from file")
+    clients.readFromFile()
+    print("starting up webserver on %s:%i..." %(flaskBind, HTTPlisteningPort))
+    eventlet.spawn(UI.socketio.run, UI.app, {"host":flaskBind, "port":HTTPlisteningPort})
+    try: UI.socketio.run(UI.app, host=flaskBind, port=HTTPlisteningPort)  # Start the asynchronous web server (flask-socketIO)
+    except KeyboardInterrupt : raise

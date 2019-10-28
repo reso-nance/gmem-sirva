@@ -1,0 +1,45 @@
+{% include 'header.min.html' %}
+
+<script type="text/javascript" charset="utf-8">
+    $(document).ready(function() {
+        var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + '/shutdown');
+        //~ var countdown = 3;
+        //~ var abort = false;
+        //~ $("#countdown").text("le système va s'éteindre dans "+countdown.toString()+"s");
+        //~ setInterval(function(){countdownToShutdown() ; }, 1000);
+        
+        //~ function countdownToShutdown() {
+            //~ if (abort == false){
+                //~ if (countdown > 0) {
+                    //~ countdown = countdown -1;
+                    //~ $("#countdown").text("le système va s'éteindre dans "+countdown.toString()+"s");
+                    //~ }
+                //~ else {
+                    //~ $("#countdown").text("le système est en train de s'éteindre");
+                    //~ $("#abort").remove(); // this button is now useless
+                    //~ socket.emit('shutdown');
+                    //~ } 
+            //~ }
+        //~ }
+       
+       //~ $(document).on('click','#abort',function(event) {
+           //~ abort = true;
+           //~ $("#countdown").text("l'extinction est annulée");
+        //~ });
+       
+    });
+    </script>
+    <link href="static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/css/custom.min.css" rel="stylesheet">
+</head>
+
+{% include 'navbar.min.html' %}
+
+        <div class="container">
+          <h1><p style="text-align : center;" text-center><span id="countdown">le système est en train de s'éteindre<span></p></h1>
+            <p class="text-center" style="margin-top:20px;margin-bottom:20px;"><video class="img-responsive" src="/static/shutdown.webm" type="video/webm" autoplay loop style="margin:auto;"></p>
+          <h3><p style="text-align : center;">Attendez que la LED verte du Raspberry Pi s'éteigne complètement pour le débrancher</p>
+       
+</body>
+
+</html>

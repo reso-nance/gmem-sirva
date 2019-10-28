@@ -3,7 +3,7 @@
 #
 #  client/solenoid.py
 #  
-#  Copyright 2019 Unknown <Sonnenblumen@localhost.localdomain>
+#  Copyright 2019 Reso-nance Numérique <laurent@reso-nance.org>
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -52,11 +52,13 @@ def setGPIOhigh(duration) :
     GPIO.output(pin, GPIO.LOW)
     return
     
-def actuate(duration=durationMax):
-    try : duration = int(duration)
-    except ValueError : 
-        try : duration = float(duration)
-        except : duration = durationMax
+def actuate(OSCaddress, OSCargs):
+    if len(OSCargs) == 0 : duration=durationMax
+    elif len(OSCargs) == 1 :
+        try : duration = int(OSCargs[0])
+        except ValueError : 
+            try : duration = float(OSCargs[0])
+            except : duration = durationMax
     Thread(target=setGPIOhigh, args=(duration,)).start() 
     
 

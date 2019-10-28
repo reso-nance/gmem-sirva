@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="web interface for the IArt project">
+    <meta name="author" content="laurent@reso-nance.org">
+    <link rel="icon" href="../static/favicon.png">
+    <title>chargement</title>
+    <!-- Bootstrap core CSS -->
+    <script src="../static/js/jquery-3.3.1.min.js"></script>
+    <script src="../static/js/popper.min.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
+    
+    <script type="text/javascript" charset="utf-8">
+        
+        $(document).ready(function() {
+              
+            function checkServerStatus(){
+                var img = document.createElement("img");
+                const randomID = Math.floor(Math.random() * 9999999999999); // random url to block the browser from caching the tracker
+                img.onload = function()  {window.location.assign("http://10.0.0.1");};
+                img.onerror = function() {console.log("offline");};
+                img.src = "http://10.0.0.1/onlineTracker"+randomID.toString()+".jpg";
+            }
+            
+            window.setInterval(function(){checkServerStatus();}, 2000);       
+             
+        });
+    
+    </script>
+    
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/css/custom.min.css" rel="stylesheet">
+</head>
+
+<body style="background:#222;">
+        
+    <div class="container h-100 d-flex">
+        <div class="jumbotron m-auto">
+          <h1 class="display-3 text-center">chargement</h1>
+           <div id="circularG"  style="margin-top:2%;margin-bottom:2%;">
+                    <div id="circularG_1" class="circularG"></div>
+                    <div id="circularG_2" class="circularG"></div>
+                    <div id="circularG_3" class="circularG"></div>
+                    <div id="circularG_4" class="circularG"></div>
+                    <div id="circularG_5" class="circularG"></div>
+                    <div id="circularG_6" class="circularG"></div>
+                    <div id="circularG_7" class="circularG"></div>
+                    <div id="circularG_8" class="circularG"></div>
+            </div>
+          <p class="lead">Le serveur est en cours de lancement, cette page s'actualisera d'elle même une fois le serveur en ligne.</p>
+        </div>
+    </div>      
+
+<style>
+html, body {
+    height: 100%;
+}
+/* Circle Animation */
+
+#circularG{
+    position:relative;
+    width:150px;
+    height:150px;
+    margin: auto;
+}
+.circularG{
+    position:absolute;
+    background-color:rgba(0,0,0,0.72);
+    width:35px;
+    height:35px;
+    border-radius:23px;
+        -o-border-radius:23px;
+        -ms-border-radius:23px;
+        -webkit-border-radius:23px;
+        -moz-border-radius:23px;
+    animation-name:bounce_circularG;
+        -o-animation-name:bounce_circularG;
+        -ms-animation-name:bounce_circularG;
+        -webkit-animation-name:bounce_circularG;
+        -moz-animation-name:bounce_circularG;
+    animation-duration:1.25s;
+        -o-animation-duration:1.25s;
+        -ms-animation-duration:1.25s;
+        -webkit-animation-duration:1.25s;
+        -moz-animation-duration:1.25s;
+    animation-iteration-count:infinite;
+        -o-animation-iteration-count:infinite;
+        -ms-animation-iteration-count:infinite;
+        -webkit-animation-iteration-count:infinite;
+        -moz-animation-iteration-count:infinite;
+    animation-direction:normal;
+        -o-animation-direction:normal;
+        -ms-animation-direction:normal;
+        -webkit-animation-direction:normal;
+        -moz-animation-direction:normal;
+}
+#circularG_1{
+    left:0;
+    top:60px;
+    animation-delay:0.47s;
+        -o-animation-delay:0.47s;
+        -ms-animation-delay:0.47s;
+        -webkit-animation-delay:0.47s;
+        -moz-animation-delay:0.47s;
+}
+#circularG_2{
+    left:15px;
+    top:15px;
+    animation-delay:0.62s;
+        -o-animation-delay:0.62s;
+        -ms-animation-delay:0.62s;
+        -webkit-animation-delay:0.62s;
+        -moz-animation-delay:0.62s;
+}
+#circularG_3{
+    top:0;
+    left:60px;
+    animation-delay:0.78s;
+        -o-animation-delay:0.78s;
+        -ms-animation-delay:0.78s;
+        -webkit-animation-delay:0.78s;
+        -moz-animation-delay:0.78s;
+}
+#circularG_4{
+    right:15px;
+    top:15px;
+    animation-delay:0.94s;
+        -o-animation-delay:0.94s;
+        -ms-animation-delay:0.94s;
+        -webkit-animation-delay:0.94s;
+        -moz-animation-delay:0.94s;
+}
+#circularG_5{
+    right:0;
+    top:60px;
+    animation-delay:1.09s;
+        -o-animation-delay:1.09s;
+        -ms-animation-delay:1.09s;
+        -webkit-animation-delay:1.09s;
+        -moz-animation-delay:1.09s;
+}
+#circularG_6{
+    right:15px;
+    bottom:15px;
+    animation-delay:1.25s;
+        -o-animation-delay:1.25s;
+        -ms-animation-delay:1.25s;
+        -webkit-animation-delay:1.25s;
+        -moz-animation-delay:1.25s;
+}
+#circularG_7{
+    left:60px;
+    bottom:0;
+    animation-delay:1.4s;
+        -o-animation-delay:1.4s;
+        -ms-animation-delay:1.4s;
+        -webkit-animation-delay:1.4s;
+        -moz-animation-delay:1.4s;
+}
+#circularG_8{
+    left:15px;
+    bottom:15px;
+    animation-delay:1.56s;
+        -o-animation-delay:1.56s;
+        -ms-animation-delay:1.56s;
+        -webkit-animation-delay:1.56s;
+        -moz-animation-delay:1.56s;
+}
+
+@keyframes bounce_circularG{
+    0%{
+        transform:scale(1);
+    }
+
+    100%{
+        transform:scale(.3);
+    }
+}
+
+@-o-keyframes bounce_circularG{
+    0%{
+        -o-transform:scale(1);
+    }
+
+    100%{
+        -o-transform:scale(.3);
+    }
+}
+
+@-ms-keyframes bounce_circularG{
+    0%{
+        -ms-transform:scale(1);
+    }
+
+    100%{
+        -ms-transform:scale(.3);
+    }
+}
+
+@-webkit-keyframes bounce_circularG{
+    0%{
+        -webkit-transform:scale(1);
+    }
+
+    100%{
+        -webkit-transform:scale(.3);
+    }
+}
+
+@-moz-keyframes bounce_circularG{
+    0%{
+        -moz-transform:scale(1);
+    }
+
+    100%{
+        -moz-transform:scale(.3);
+    }
+}
+</style>
+</body>
+</html>

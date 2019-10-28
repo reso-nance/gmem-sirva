@@ -3,7 +3,7 @@
 #
 #  client/peakDetector.py
 #  
-#  Copyright 2019 Unknown <Sonnenblumen@localhost.localdomain>
+#  Copyright 2019 Reso-nance Numérique <laurent@reso-nance.org>
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by

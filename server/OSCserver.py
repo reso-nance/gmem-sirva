@@ -3,7 +3,7 @@
 #
 #  OSCserver.py
 #  
-#  Copyright 2019 Unknown <Sonnenblumen@localhost.localdomain>
+#  Copyright 2019 Reso-nance Numérique <laurent@reso-nance.org>
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 # ~ socket.gaierror: [Errno -2] Name or service not known
 
 import liblo
-import midiFile
+import midiFile, clients
 
 listenPort = 8000
 sendPort = 9000
@@ -52,16 +52,30 @@ def listen():
         raise SystemError
         
     server.add_method("/readMidi", None, midiFile.play)
-    server.add_method("/readAudio", None, unknownOSC)
+    server.add_method("/stopMidi", None, midiFile.stop)
+    server.add_method("/clients", None, clients.sendList)
+    server.add_method("/heartbeat", None, clients.processHeartbeat)
+    server.add_method("/filesList", None, clients.processFileList)
+    server.add_method("/myID", None, clients.processClientsInfos)
+    server.add_method("/shutdown", None, shutdown)
     server.add_method(None, None, unknownOSC)
     
     while True : 
         server.recv(100)
 
-def sendOSC(IPaddress, command, args):
-    print("sending OSC {} {} to {}".format(command, args, IPaddress))
-    liblo.send((IPaddress, sendPort), command, args)
+def sendOSC(IPaddress, command, args=None):
+    if args :
+        print("sending OSC {} {} to {}".format(command, args, IPaddress))
+        liblo.send((IPaddress, sendPort), command, args)
+    else :
+        print("sending OSC {} to {}".format(command, IPaddress))
+        liblo.send((IPaddress, sendPort), command)
 
+def shutdown(IPaddress, command, args):
+    print("asked to shutdown via OSC by {}".format(IPaddress))
+    import os
+    os.system("sudo shutdown now &")
+    raise SystemExit
 
 if __name__ == '__main__':
     print("this file is made to be imported as a module, not executed")

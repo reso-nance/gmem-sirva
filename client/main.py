@@ -3,7 +3,7 @@
 #
 #  client/main.py
 #  
-#  Copyright 2019 Unknown <Sonnenblumen@localhost.localdomain>
+#  Copyright 2019 Reso-nance Numérique <laurent@reso-nance.org>
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -24,15 +24,19 @@
 
 from threading import Thread
 from time import sleep
-import signal, subprocess
+import signal, subprocess, atexit
 import OSCserver, peakDetector, audio
 
 oscServerThread = None
+heartbeatThread = None
 peakDetectorThread = None
 JACKconnectionThread = None
 
 def exitCleanly():
     if oscServerThread : 
+        print("stopping the heartbeat")
+        OSCserver.heartbeat = False
+        heartbeatThread.join()
         print("closing the OSC server")
         OSCserver.runServer = False
         oscServerThread.join()
@@ -47,9 +51,13 @@ def exitCleanly():
 
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, exitCleanly) # register this exitCleanly function to be called on sigterm
+    atexit.register(exitCleanly) # idem when called from within this script
     print("starting the OSC server...")
     oscServerThread = Thread(target=OSCserver.listen)
     oscServerThread.start()
+    print("starting the heartbeat thread ...")
+    heartbeatThread = Thread(target = OSCserver.sendHeartbeat)
+    heartbeatThread.start()
     print("starting the audio peak detector...")
     peakDetectorThread = Thread(target=peakDetector.listen)
     peakDetectorThread.start()

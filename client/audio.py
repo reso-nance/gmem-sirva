@@ -4,7 +4,7 @@
 #
 #  client/audio.py
 #  
-#  Copyright 2019 Unknown <Sonnenblumen@localhost.localdomain>
+#  Copyright 2019 Reso-nance Numérique <laurent@reso-nance.org>
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ inputs = {"microphone":"system:capture_1", "analogIN": "system:capture_2"}
 outputs = {"transducer":"system:playback_1", "analogOUT":"system:playback_2"}
 alsaControls = {"microphone": "'Mic',0", "analogIN":"'Mic',1", "transducer":"'UMC202HD 192k Output',0", "analogOUT":"'UMC202HD 192k Output',1"}
 
-def init(soundcard=soundcardName, sampleRate=96000, bufferSize=128,
+def init(soundcard=soundcardName, sampleRate=96000, bufferSize=256,
          bufferCount=2, priority=70, timeout=2000, maxClients=16):
 # ~ def init(soundcard=soundcardName, sampleRate=48000, bufferSize=1024,
          # ~ bufferCount=4, priority=70, timeout=2000, maxClients=16):
@@ -139,14 +139,33 @@ def setVolume(OSCaddress, OSCargs):
     channel, volume = OSCargs
     assert channel in alsaControls
     assert volume in range(101)
-    cmd = "amixer -Dhw:{} -q set {} {}%".format(soundcardName, alsaControls[channel], volume)
+    cmd = "amixer -Dhw:{} -q set {} {}%".format(soundcardName, alsaControls[channel], volume) #FIXME : outputs should use amixer sset Master 80%,20% to balance
     subprocess.Popen(cmd, shell=True)
+
+def getVolumes():
+    volumes = [0,0,0,0]
+    findLine = lambda txt, delimiter : next(line for line in txt.splitlines() if line.startswith(delimiter))
+    volumes[0] = getAmixerControl("Mic,0", "  Front Left: Capture")
+    volumes[1] = getAmixerControl("Mic,1", "  Mono: Capture")
+    volumes[2] = getAmixerControl("UMC202HD 192k Output", "  Front Left: Playback")
+    volumes[3] = getAmixerControl("UMC202HD 192k Output", "  Front Right: Playback")
+    return volumes
+    
+def getAmixerControl(control, delimiter) :
+    cmd = "amixer -Dhw:{} get '".format(soundcardName) # controls can be listed by amixer -Dhw:U192k  scontents
+    p = subprocess.Popen(cmd + control +"'", shell=True, stdout=subprocess.PIPE)
+    out, err = p.communicate()
+    out = out.decode("utf-8")
+    line = next(line for line in out.splitlines() if line.startswith(delimiter)) # extract line beginning with delimiter
+    line = int(line.split(" [")[1].split("%]")[0])# strip the number between brackets and convert it to int [94%] -> 94
+    return line
 
 # called when exiting
 def close():    
     runningSince = datetime.now() - startTime
     runningSince = runningSince.total_seconds() / 3600
     xrunPerHour = xrunCounter / runningSince
-    print( "xruns stats : total %i xruns, %.02f xruns/h, mean duration : %i micros" % (xrunCounter, xrunPerHour, int(xrunSum/xrunCounter)) )
+    if xrunCounter > 0 : 
+        print( "xruns stats : total %i xruns, %.02f xruns/h, mean duration : %i micros" % (xrunCounter, xrunPerHour, int(xrunSum/xrunCounter)) )
     client.deactivate()
     subprocess.Popen("pkill jackd", shell=True)

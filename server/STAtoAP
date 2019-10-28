@@ -64,9 +64,9 @@ echo "
  sed -i -e 's/\#net.ipv4.ip_forward\=1/net.ipv4.ip_forward\=1/g'  /etc/sysctl.conf
  iptables -t nat -A  POSTROUTING -o eth0 -j MASQUERADE
 # redirect port 8080 to port 80
- #~ iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
+ iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
 # same for localhost/loopback (not needed for now)
-# iptables -t nat -I OUTPUT -p tcp -d 127.0.0.1 --dport 80 -j REDIRECT --to-ports 8080
+ iptables -t nat -I OUTPUT -p tcp -d 127.0.0.1 --dport 80 -j REDIRECT --to-ports 8080
  if [ -f /etc/iptables.ipv4.nat ]; then cp /etc/iptables.ipv4.nat /etc/iptables.ipv4.nat.orig; fi
  sh -c "iptables-save > /etc/iptables.ipv4.nat"
  echo "/etc/iptables.ipv4.nat:"
@@ -80,6 +80,11 @@ exit\ 0/g' /etc/rc.local
 echo "/etc/rc.local:"
 cat /etc/rc.local
 
+echo "adding redirections from gmem.org to localhost"
+echo "address=/gmem.org/127.0.0.1
+address=/www.gmem.org/127.0.0.1
+" >> /etc/dnsmasq.d/gmem.rog
+
 echo "setting hostname to $SSID"
 raspi-config nonint do_hostname "$SSID"
 
@@ -92,7 +97,7 @@ echo "
  mv /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf.bak
  systemctl stop wpa_supplicant.service
  systemctl disable wpa_supplicant wpa_supplicant.service 
- systemctl start hostapd
+ systemctl start hostapd || systemctl unmask hostapd ; systemctl start hostapd # hostapd gets masked sometimes in the newer raspbian releases, no idea why.
  systemctl start dnsmasq
  
 echo "
