@@ -25,6 +25,7 @@ from flask import Flask, g, render_template, redirect, request, url_for, copy_cu
 from flask_socketio import SocketIO, emit
 # ~ import os, logging, subprocess, eventlet
 import os, logging, subprocess
+import clients
 # ~ eventlet.monkey_patch() # needed to make eventlet work asynchronously with socketIO, 
 
 mainTitle = "GMEM || CIRVA || Réso-nance"
@@ -78,6 +79,12 @@ def sck_shutdown():
 @socketio.on('volChanged', namespace='/home')
 def setVolume(data):
     print("changed volumes for {} to {}".format(data["hostname"], data["volumes"]))
+    volName = ["microphone", "analogIN", "transducer", "analogOUT"][data["index"]]
+    clients.sendOSC(data["hostname"], "/volume", [volName, data["volume"]])
+
+@socketio.on('midiNoteChanged', namespace='/home')
+def changeMidiNote(data):
+    clients.changeParameter(data["hostname"], "midiNote", data["midinote"])
     
 
 # --------------- FUNCTIONS ----------------

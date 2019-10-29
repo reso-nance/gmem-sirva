@@ -23,10 +23,11 @@
 #  
 
 # ~ from threading import Thread
-import json, os
+import json, os, datetime, random, time
 import OSCserver
 knownClientsFile = "knownClients.json"
 knownClients = {}
+disconnectedThread = True
 
 class Client():
     def __init__(self, **kwargs):
@@ -51,35 +52,47 @@ class Client():
         return vars(self)
 
 def processHeartbeat(command, args, tags, IPaddress):
+    global knownClients
+    hostname = args[0]
     sendersIP = IPaddress.url.split("//")[1].split(":")[0] # retrieve IP from an url like osc.udp://10.0.0.12:35147/
-    if args[0] not in knownClients : 
-        print("received heartbeat from %s (%s), asked for details" % (args[0], sendersIP))
+    if hostname not in knownClients or knownClients[hostname]["connected"] is False: 
+        print("received heartbeat from %s (%s), asked for details" % (hostname, sendersIP))
         OSCserver.sendOSC(sendersIP, "/getInfos")
+    else : 
+        if sendersIP != knownClients[hostname]["IP"] : knownClients[hostname]["IP"] = sendersIP
+        knownClients[hostname]["status"] = "en ligne, vu le "+getDate()
+        knownClients[hostname]["lastSeen"] = time.time()
+        # ~ print("received heartbeat from known client %s" % hostname)
     pass
 
 def processClientsInfos(command, args, tags, IPaddress):
     global knownClients
-    hostname, IP, midiNote, volMic, volAnalogIN, volTrans, volAnalogOUT = args
+    print("got info from {} : {}".format(IPaddress, args))
+    hostname, midiNote, volMic, volAnalogIN, volTrans, volAnalogOUT = args
+    IP = IPaddress.url.split("//")[1].split(":")[0] # retrieve IP from an url like osc.udp://10.0.0.12:35147/
     if hostname not in knownClients :
         print("adding new device %s to the known devices list")
         knownClients[hostname] = {}
         knownClients[hostname]["fileList"] = []
-        OSCserver.sendOSC(IP, "/getFileList")
+    OSCserver.sendOSC(IP, "/getFileList")
     knownClients[hostname]["IP"] = IP
     knownClients[hostname]["midiNote"] = midiNote
     knownClients[hostname]["volumes"] = [volMic, volAnalogIN, volTrans, volAnalogOUT]
+    knownClients[hostname]["status"] = "en ligne, vu le "+getDate()
+    # ~ knownClients[hostname]["lastSeen"] = datetime.datetime.now()
+    knownClients[hostname]["lastSeen"] = time.time()
+    knownClients[hostname]["connected"] = True
+    print (knownClients)
 
 def processFileList(command, args, tags, IPaddress):
-    hostname = arg[0]
+    hostname = args[0]
     if hostname not in knownClients :
         OSCserver.sendOSC(IPaddress.url.split("//")[1].split(":")[0], "/getInfos") # retrieve IP from an url like osc.udp://10.0.0.12:35147/
         return
     else : 
         knownClients[hostname]["fileList"] = []
         for f in args[1:] : knownClients[hostname]["fileList"].append(f)
-
-if __name__ == '__main__':
-    raise SystemError ("this clients file isn't made to be executed on it's own but to be imported as a module")
+        print("got filelist from {} : {}".format(hostname, args[1:]))
 
 def readFromFile():
     global knownClients
@@ -93,8 +106,65 @@ def readFromFile():
 def writeToFile():
     with open(knownClientsFile, 'w') as f : json.dump(knownClients, f)
     
+def sendOSC(hostname, address, args=None):
+    try : IPaddress = knownClients[hostname]["IP"]
+    except KeyError :
+        print("tried to send {} but client {} isn't in the knownClients anymore".format(address, hostname))
+        print ("  known clients : {}".format(knownClients.keys()))
+        return
+    if args : OSCserver.sendOSC(IPaddress, address, args)
+    else : OSCserver.sendOSC(IPaddress, address)
+    
+def changeParameter(hostname, paramName, value):
+    global knownClients
+    try : client = knownClients[hostname]
+    except KeyError :
+        print("tried to change parameter {} for client {} : client isn't in in the knownClients anymore".format(paramName, hostname))
+        print ("  known clients : {}".format(knownClients.keys()))
+        return
+    if paramName in client :
+        client[paramName] = value
+        print("set {} {} to {}".format(hostname, paramName, value))
+    else : print ("cannot update {} : unkown parameter".format(paramName))
+    
 def sendList():
     pass
 
-def addClient(clientDict):
-    pass
+def new(name, IP=None, status=None, midiNote=None, volumes = None,  ):
+    if not IP : IP=name+".local"
+    if not status : status = "en ligne depuis le " + getDate()
+    if not midiNote : midiNote = random.randrange(12, 127)
+    if not volumes : volumes=[0,0,0,0]
+    
+
+def getDate(date = None):
+    if not date : date = datetime.datetime.now()
+    return date.strftime("%d %b %Y %H:%M:%S")
+
+def init():
+    global knownClients
+    print("  marking all known clients as disconnected ")
+    currentTime = time.time()
+    for name in knownClients :
+            knownClients[name]["connected"] = False
+            lastSeen = currentTime - knownClients[name]["lastSeen"]
+            lastConnected = datetime.datetime.now() - datetime.timedelta(seconds=lastSeen)
+            knownClients[name]["status"] = "déconnecté, vu pour la dernière fois le "+getDate(lastConnected)
+    print("  asking for their ID")
+    for name in knownClients : OSCserver.sendOSC(name+".local", "/getInfos")
+
+def checkDisconnected():
+    global knownClients
+    while disconnectedThread :
+        # ~ currentTime = datetime.datetime.now() # datetime would have been a better choice if only it was JSON-serialisable
+        currentTime = time.time()
+        for client in [c for c in knownClients if knownClients[c]["connected"]] :
+            # ~ if (currentTime - client["lastSeen"]).total_seconds() > 2 : 
+            if currentTime - knownClients[client]["lastSeen"] > 2 : 
+                knownClients[client]["connected"] = False
+                knownClients[client]["status"] = "déconnecté depuis le "+getDate()
+                print("client %s is now marked as disconnected" % client)
+        time.sleep(1)
+
+if __name__ == '__main__':
+    raise SystemError ("this clients file isn't made to be executed on it's own but to be imported as a module")

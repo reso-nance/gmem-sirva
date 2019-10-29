@@ -81,7 +81,7 @@ $( document ).ready(function() {
         connectedDevices.forEach(function(module) {
             if (module.name === moduleName) {
                 module.volumes[index] = value;
-                socket.emit("volChanged", {hostname:encodeURIComponent(moduleName), volumes:module.volumes});
+                socket.emit("volChanged", {hostname:encodeURIComponent(moduleName), index:index, volume:value});
             }
         });
     });

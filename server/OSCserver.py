@@ -33,6 +33,7 @@ import midiFile, clients
 listenPort = 8000
 sendPort = 9000
 server = None
+listenToOSC = True
 
 def main(args):
     return 0
@@ -60,7 +61,7 @@ def listen():
     server.add_method("/shutdown", None, shutdown)
     server.add_method(None, None, unknownOSC)
     
-    while True : 
+    while listenToOSC : 
         server.recv(100)
 
 def sendOSC(IPaddress, command, args=None):

@@ -21,7 +21,7 @@
 #  MA 02110-1301, USA.
 #  
 #  
-import liblo, socket, os, glob
+import liblo, socket, os, glob, random, time
 import solenoid, audio
 
 listenPort = 9000
@@ -30,8 +30,9 @@ server = None
 runServer = True
 masterPiIP = ("10.0.0.1", 8000)
 myHostname = socket.gethostname()
-myIP = getLocalIP()
-hearbeat = True
+myIP = None
+heartbeat = True
+midinote = None
 
 def unknownOSC(path, args, types, src):
     print("got unknown message '%s' from '%s'" % (path, src.url))
@@ -40,6 +41,9 @@ def unknownOSC(path, args, types, src):
 
 def listen():
     global server
+    readMidiNote()
+    if not os.path.isdir("wav") : os.makedirs("wav")
+    myIP = getLocalIP()
     try:
         server = liblo.Server(listenPort)
         print("listening to incoming OSC on port %i" % listenPort)
@@ -56,6 +60,7 @@ def listen():
     server.add_method("/volume", None, audio.setVolume) # ex : /volume analogOUT 96
     server.add_method("/shutdown", None, shutdown) # ex : /volume analogOUT 96
     server.add_method("/getFileList", None, sendFileList) # ex : /volume analogOUT 96
+    server.add_method("/getInfos", None, sendID) # ex : /volume analogOUT 96
     server.add_method(None, None, unknownOSC)
     
     while runServer : 
@@ -64,7 +69,8 @@ def listen():
 
 def sendHeartbeat():
     while heartbeat : 
-        liblo.send(masterPiIP, "/hearbeat", [myHostname])
+        liblo.send(masterPiIP, "/heartbeat", myHostname)
+        # ~ print("sent heartbeat to {}".format(masterPiIP))
         time.sleep(1)
 
 def sendOSC(IPaddress, command, args):
@@ -77,12 +83,14 @@ def shutdown(IPaddress, command, args) :
     raise SystemExit
 
 def sendFileList(command, args, tags, IPaddress):
-    fileList = [myHostname] + glob.glob("wav/*.wav")
-    OSCserver.sendOSC(masterPiIP, "/fileList", fileList)
+    fileList = [myHostname] + [f.replace("wav/", "") for f in glob.glob("wav/*.wav")]
+    liblo.send(masterPiIP, "/filesList", *fileList)
+    print("sent file list {}".format(fileList))
 
 def sendID():
-    
-    liblo.send(masterPiIP, "/ID", [myHostname, myIP, midinote, vol, vol, vol, vol])
+    args = [myHostname, midinote]
+    args += audio.getVolumes()
+    liblo.send(masterPiIP, "/myID", *args)
      
 
 def getLocalIP(): # a bit hacky but still does the job
@@ -91,6 +99,35 @@ def getLocalIP(): # a bit hacky but still does the job
     localIP = s.getsockname()[0]
     s.close()
     return localIP
+
+def readMidiNote():
+    global midinote
+    textFile = [f.replace(" ","") for f in glob.glob("*.txt") if "midinote" in f]
+    if len(textFile) > 0: 
+        midiNote = textFile[0].split("midinote")[1].split(".")[0]
+        try :
+            midiNote = int(midiNote)
+            if midiNote in range(12, 128):
+                print("read midiNote from file, set to %i" % midiNote)
+                midinote = midiNote
+                return
+            else : print("midinote not in range 12~127 : %i" % midiNote)
+        except ValueError :
+            print("invalid midinote file : "+textFile[0])
+    midinote = random.randrange(12, 128)
+    print("set midiNote at random : %i" % midinote)
+    writeMidiNote()
+
+def writeMidiNote():
+    textFile = [f for f in glob.glob("*.txt") if "midinote" in f]
+    if len(textFile) > 0 :
+        for f in textFile : 
+            print("deleting midinote file : %s" %f)
+            os.remove(f)
+    filename = "midinote" +str(midinote) + ".txt"
+    with open(filename, "w+") as f : f.write("le numéro de la note midi de cet appareil doit se trouver dans le nom de fichier, précédé du mot 'midinote'\nEx: 'midinote64.txt'")
+    print("written midinote to file %s" % filename)
+
 
 if __name__ == '__main__':
     print("this file is made to be imported as a module, not executed")
