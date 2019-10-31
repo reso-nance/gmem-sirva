@@ -112,6 +112,16 @@ $( document ).ready(function() {
         });
     });
     
+    // upload audio file
+	$(document).on('change', '.upload', function(event) {
+        $(this).closest('form').submit() //autosubmit the file upload form 
+ 	});	
+    
+    //~ // upload audio file
+	//~ $(document).on('change', '.audio-upload', function(event) {
+        //~ const moduleName = $(this).attr('data-modulename');
+ 	//~ });	
+    
     // update connected devices on server request
     socket.on('deviceList', function(data) {
         connectedDevices = Object.values(data);

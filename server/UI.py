@@ -23,8 +23,9 @@
 #  
 from flask import Flask, g, render_template, redirect, request, url_for, copy_current_request_context, send_file, flash, Markup, Response
 from flask_socketio import SocketIO, emit
+from flask_uploads import UploadSet, configure_uploads, UploadNotAllowed
 # ~ import os, logging, subprocess, eventlet
-import os, logging, subprocess
+import os, logging, subprocess, urllib.parse
 import clients
 # ~ eventlet.monkey_patch() # needed to make eventlet work asynchronously with socketIO, 
 
@@ -41,6 +42,13 @@ socketio = SocketIO(app, async_mode="threading", ping_timeout=36000)# set the ti
 # disable flask debug (except errors)
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
+# flask-upload
+audioFiles = UploadSet(name='audioFiles', extensions=('wav', 'WAV', 'Wav', 'mp3', 'MP3', 'Mp3', 'ogg', 'OGG', 'Ogg'))
+app.config['UPLOADED_AUDIOFILES_DEST'] = "./tmp"
+midiFiles = UploadSet(name='audioFiles', extensions=('MID', 'mid', 'Mid'))
+app.config['UPLOADED_MIDIFILES_DEST'] = "./midiFiles"
+configure_uploads(app, (audioFiles, midiFiles))
+uploadSets={"audio":audioFiles, "midi": midiFiles}
 
 # --------------- FLASK ROUTES ----------------
 
@@ -59,6 +67,36 @@ def rte_trk(ID):
     filePath = os.path.abspath(os.path.dirname(__file__)) + "/static/trk.jpg"
     return send_file(filePath, mimetype='image/jpg')
     
+@app.route('/uploadAudio/<string:hostname>', methods=['GET', 'POST'])
+def rte_uploadAudio(hostname):
+    if request.method == 'POST' and 'audiofile' in request.files:
+        hostname = urllib.parse.unquote(hostname)
+        if hostname not in clients.knownClients or clients.knownClients[hostname]["connected"] == False :
+            print("tried to send an audio file to an unknown or disconnected host :" + hostname)
+            return('<script>alert("Erreur : l\'appareil sélectionné n\'est pas en ligne");window.location = "/";</script>')
+        try :
+            filename = uploadSets["audio"].save(request.files['audiofile'])
+            print("successfully uploaded audio "+filename)
+            cmd = "sshpass -p raspberry scp -oStrictHostKeyChecking=no ./tmp/%s pi@%s.local:/home/pi/client/wav/" % (filename, hostname)
+            errCode = os.system(cmd)
+            if errCode == 0 : print("successfully copied the file %s to %s.local" % (filename, hostname))
+            else : print("could'nt copy the file %s to host %s" % (filename, hostname))
+        except UploadNotAllowed:
+            print("ERROR : this file is not an audio file ")
+            return('<script>alert("Erreur : le fichier selectionné n\'est pas un fichier wav ou mp3");window.location = "/";</script>')
+        return redirect('#')
+        
+@app.route('/uploadMidi/', methods=['GET', 'POST'])
+def rte_uploadMidi():
+    if request.method == 'POST' and "midifile" in request.files:
+        # ~ deviceID = urllib.parse.unquote(hostname)
+        try :
+            filename = uploadSets["midi"].save(request.files['midifile'])
+            print("successfully uploaded midi "+filename)
+        except UploadNotAllowed:
+            print("ERROR : this file is not a midi file ")
+            return('<script>alert("Erreur : le fichier selectionné n\'est pas un fichier midi");window.location = "/";</script>')
+        return redirect('#')
     
 # --------------- SOCKET IO EVENTS ----------------
 

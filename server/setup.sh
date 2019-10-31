@@ -13,7 +13,7 @@ sudo apt-get update||exit 1
 sudo apt-get -y dist-upgrade||exit 1
 echo "
 installing .deb packages :"
-sudo apt-get -y --fix-missing install python3-pip python3-dev liblo-dev libasound2-dev libjack-jackd2-dev portaudio19-dev unclutter ||exit 1
+sudo apt-get -y --fix-missing install python3-pip python3-dev liblo-dev libasound2-dev libjack-jackd2-dev portaudio19-dev unclutter sshpass ||exit 1
 echo "
 installing pip packages :"
 pip3 install Cython||exit 2

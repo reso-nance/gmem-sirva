@@ -34,6 +34,22 @@
         <ul class="list-group statuslist" id="status-list">
            <!-- statuses will be inserted here -->
         </ul>
+<!--
+        <button type="button" class="btn btn-success audio-upload" data-modulename="test">UPLOAD WAV</button>
+-->
+        <form  method=POST enctype=multipart/form-data action="/uploadAudio/gmemClientTest">
+            <label class="btn btn-success upload" data-modulename="test">
+                <input type="file" name="audiofile" style="display:none;">
+                Upload Wav
+            </label>
+        </form>
+
+        <form  method=POST enctype=multipart/form-data action="/uploadMidi">
+            <label class="btn btn-info upload">
+                <input type="file" name="midifile" style="display:none;">
+                Upload MIDI
+            </label>
+        </form>
         
       </div> 
     </div><!-- end menu gauche -->
