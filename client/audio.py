@@ -30,6 +30,7 @@
 import jack, threading, subprocess, time, queue
 from datetime import datetime
 import soundfile as sf
+import OSCserver
 
 soundcardName = "U192k" # soundcard name in ALSA, as listed by aplay -l
 client, event, jackServerThread, connections = None, None, None, None
@@ -141,6 +142,7 @@ def setVolume(OSCaddress, OSCargs):
     assert volume in range(101)
     cmd = "amixer -Dhw:{} -q set {} {}%".format(soundcardName, alsaControls[channel], volume) #FIXME : outputs should use amixer sset Master 80%,20% to balance
     subprocess.Popen(cmd, shell=True)
+    OSCserver.refreshVolumes()
 
 def getVolumes():
     volumes = [0,0,0,0]

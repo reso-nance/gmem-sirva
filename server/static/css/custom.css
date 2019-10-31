@@ -102,13 +102,17 @@
 	left: 28px;
 }
 
-.statuslist > a{
+.statuslist >li{
 	font-weight: 400;
 	text-decoration: none;
 	color: #666666;
 
 }
 
+a.disabled {
+  color: gray;
+  pointer-events: none;
+}
 
 
 .page {
@@ -143,7 +147,7 @@
 	padding: 7px;
 }
 
-#module_name > h1{
+.module-name > h1{
 	text-transform: uppercase;
 	font-size: 1.2em;
 	padding-bottom: 5px;
@@ -181,7 +185,7 @@
 	text-align: center; 
 }
 
-.midinote_editor{
+.midinote-editor{
 	display: inline-block;
 	background-color: #000;
 	font-size: .7em;
@@ -190,6 +194,20 @@
 	border: none;
 	width: 20px;
 	height: 20px;
+}
+
+.modulename-editor{
+	text-transform: uppercase;
+	background-color: #000;
+	font-size: .9em;
+	padding-bottom: 5px;
+	color: white;
+	border: none;
+    font-weight: bold;
+/*
+	width: 20px;
+	height: 20px;
+*/
 }
 
 

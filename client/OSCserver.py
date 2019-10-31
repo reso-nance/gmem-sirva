@@ -61,6 +61,7 @@ def listen():
     server.add_method("/shutdown", None, shutdown) # ex : /volume analogOUT 96
     server.add_method("/getFileList", None, sendFileList) # ex : /volume analogOUT 96
     server.add_method("/getInfos", None, sendID) # ex : /volume analogOUT 96
+    server.add_method("/changeHostname", None, changeHostname) # ex : /volume analogOUT 96
     server.add_method(None, None, unknownOSC)
     
     while runServer : 
@@ -69,29 +70,51 @@ def listen():
 
 def sendHeartbeat():
     while heartbeat : 
-        liblo.send(masterPiIP, "/heartbeat", myHostname)
+        # ~ liblo.send(masterPiIP, "/heartbeat", myHostname)
+        sendOSCtoServer("/heartbeat", [myHostname])
         # ~ print("sent heartbeat to {}".format(masterPiIP))
         time.sleep(1)
 
-def sendOSC(IPaddress, command, args):
+def sendOSC(IPaddress, command, args=None,):
     print("sending OSC {} {} to {}".format(command, args, IPaddress))
-    liblo.send((IPaddress, sendPort), command, args)
+    if args : liblo.send((IPaddress, sendPort), command, *args)
+    else : liblo.send((IPaddress, sendPort), command)
+
+def sendOSCtoServer(command, args=None):
+    if args : liblo.send(masterPiIP, command, *args)
+    else : liblo.send(masterPiIP, command)
 
 def shutdown(IPaddress, command, args) :
     print("asked for shutdown via OSC from {}".format(IPaddress))
     os.system("sudo shutdown now &")
     raise SystemExit
 
+def changeHostname(command, args, tags, IPaddress):
+    global myHostname
+    hostname = args
+    print("asked to change hostname from %s to %s" % (myHostname, hostname))
+    os.system("sudo raspi-config nonint do_hostname \"%s\"" % hostname)
+    errCode = 1
+    while errCode != 0 : errCode = os.system('sudo hostnamectl set-hostname "%s"'%hostname) # workaround "temporary failure in name resolution"
+    os.system("sudo  systemctl restart avahi-daemon") # needed to avoid a reboot
+    time.sleep(3)
+    myHostname = socket.gethostname()
+    sendID()
+
 def sendFileList(command, args, tags, IPaddress):
     fileList = [myHostname] + [f.replace("wav/", "") for f in glob.glob("wav/*.wav")]
-    liblo.send(masterPiIP, "/filesList", *fileList)
+    # ~ liblo.send(masterPiIP, "/filesList", *fileList)
+    sendOSCtoServer("/filesList", fileList)
     print("sent file list {}".format(fileList))
 
 def sendID():
     args = [myHostname, midinote]
     args += audio.getVolumes()
-    liblo.send(masterPiIP, "/myID", *args)
+    sendOSCtoServer("/myID", args)
+    # ~ liblo.send(masterPiIP, "/myID", *args)
      
+def refreshVolumes():
+    sendOSCtoServer("/myVolumes", [myHostname]+audio.getVolumes())
 
 def getLocalIP(): # a bit hacky but still does the job
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

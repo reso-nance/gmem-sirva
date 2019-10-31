@@ -27,8 +27,8 @@
   # ~ File "<stdin>", line 1, in <module>
 # ~ socket.gaierror: [Errno -2] Name or service not known
 
-import liblo
-import midiFile, clients
+import liblo, time
+import midiFile, clients, UI
 
 listenPort = 8000
 sendPort = 9000
@@ -54,10 +54,12 @@ def listen():
         
     server.add_method("/readMidi", None, midiFile.play)
     server.add_method("/stopMidi", None, midiFile.stop)
-    server.add_method("/clients", None, clients.sendList)
+    server.add_method("/whoIsThere", None, clients.whoIsThere)
+    server.add_method("/knownClients", None, clients.sendKnownClients)
     server.add_method("/heartbeat", None, clients.processHeartbeat)
     server.add_method("/filesList", None, clients.processFileList)
     server.add_method("/myID", None, clients.processClientsInfos)
+    server.add_method("/myVolumes", None, UI.refreshVolumes)
     server.add_method("/shutdown", None, shutdown)
     server.add_method(None, None, unknownOSC)
     
@@ -67,13 +69,17 @@ def listen():
 def sendOSC(IPaddress, command, args=None):
     if args :
         print("sending OSC {} {} to {}".format(command, args, IPaddress))
-        liblo.send((IPaddress, sendPort), command, args)
+        liblo.send((IPaddress, sendPort), command, *args)
     else :
         print("sending OSC {} to {}".format(command, IPaddress))
         liblo.send((IPaddress, sendPort), command)
 
 def shutdown(IPaddress, command, args):
     print("asked to shutdown via OSC by {}".format(IPaddress))
+    for client in clients.knownClients :
+        for i in range(3) : # we send it thrice for good luck
+            sendOSC(client["IP"], "/shutdown")
+            time.sleep(.3)
     import os
     os.system("sudo shutdown now &")
     raise SystemExit

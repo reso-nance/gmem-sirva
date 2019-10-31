@@ -65,6 +65,7 @@ def rte_trk(ID):
 @socketio.on('connect', namespace='/home')
 def onConnect():
     print("client connected, session id : "+request.sid)
+    refreshDeviceList()
 
 @socketio.on('disconnect', namespace='/home')
 def onDisconnect():
@@ -78,14 +79,29 @@ def sck_shutdown():
  
 @socketio.on('volChanged', namespace='/home')
 def setVolume(data):
-    print("changed volumes for {} to {}".format(data["hostname"], data["volumes"]))
     volName = ["microphone", "analogIN", "transducer", "analogOUT"][data["index"]]
     clients.sendOSC(data["hostname"], "/volume", [volName, data["volume"]])
+    print("changed volumes for {}:{} to {}".format(data["hostname"], volName, data["volume"]))
 
 @socketio.on('midiNoteChanged', namespace='/home')
 def changeMidiNote(data):
     clients.changeParameter(data["hostname"], "midiNote", data["midinote"])
     
+@socketio.on("hostnameChanged", namespace="/home")
+def changeHostname(data):
+    clients.changeHostname(data["hostname"], data["newHostname"])
+    
 
 # --------------- FUNCTIONS ----------------
 
+def refreshDeviceList():
+    socketio.emit("deviceList", clients.knownClients, namespace='/home')
+    print("updated UI device list")
+
+def refreshVolumes(command, args, tags, IPaddress):
+    hostname = args[0]
+    volumes = args[1:]
+    if hostname in clients.knownClients :
+        clients.knownClients[hostname]["volumes"] = volumes
+        socketio.emit("updateVolumes", {"hostname":hostname, "volumes":volumes})
+        

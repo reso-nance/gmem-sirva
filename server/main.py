@@ -49,7 +49,12 @@ if __name__ == '__main__':
     print("reading known clients from file")
     clients.readFromFile()
     print("initialising known clients")
-    clients.init()
+    try : clients.init()
+    except KeyboardInterrupt : raise
+    except Exception as e : 
+        print("error occured during client init, corrupted file ? \n", e)
+        clients.forgetAll()
+        clients.init()
     print("starting check disconnect thread...")
     Thread(target=clients.checkDisconnected).start()
     print("starting up webserver on %s:%i..." %(flaskBind, HTTPlisteningPort))

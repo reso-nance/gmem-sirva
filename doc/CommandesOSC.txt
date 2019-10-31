@@ -6,9 +6,12 @@ Les arguments notés [entre crochets] sont facultatifs, les types OSC sont noté
 
 Côté serveur :
 /clients : demande au serveur une liste de clients connectés. Le serveur répondra par un message OSC sur le port 9000 contenant en argument le nom de tous les clients actuellement connectés
-/shutdown : demande l'extinction du serveur
+/shutdown : demande l'extinction du serveur et de tous ses clients
 /readMidi : lit instantanément un fichier midi préalablement stocké sur l'ensemble des machines
           (str) nomDuFichier : nom du fichier midi stocké sur le serveur (sensible à la casse)
+/stopMidi : stoppe instantanément la lecture du fichier midi
+/whoIsThere : renvoie à l'expéditeur sur le port 9000 le message OSC "/connectedClients" contenant la liste des appareils actuellement connectés
+/knownClients : renvoie à l'expéditeur sur le port 9000 le message OSC "/knownClients" contenant la liste de tous les appareils connus, connectés ou non
 
 Côté client :
 Le client peut-être directement contacté par son nom d'hôte au sein du réseau wifi.
@@ -50,3 +53,5 @@ Par exemple, pour un client nommé "bidule", les messages OSC peuvent être envo
          ex : /volume analogOUT 87
 
 /shutdown : demande l'extinction de la machine
+
+

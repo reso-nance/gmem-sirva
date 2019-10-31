@@ -24,66 +24,87 @@
 
 # ~ from threading import Thread
 import json, os, datetime, random, time
-import OSCserver
+import OSCserver, UI
 knownClientsFile = "knownClients.json"
 knownClients = {}
 disconnectedThread = True
 
-class Client():
-    def __init__(self, **kwargs):
-        self.wavFiles = kwargs["wavFiles"] if "wavFiles" in kwargs else []
-        self.name = kwargs["name"]
-        self.IP = kwargs["IP"] if "IP" in kwargs else self.name + ".local"
-        self.status = kwargs["status"] if "status" in kwargs else "inconnu"
-        self.midiNote = kwargs["midiNote"] if "midiNote" in kwargs else 65
-        self.volumes = kwargs["volumes"] if "volumes" in kwargs else {"microphone":50, "analogIN":50, "transducer":50, "analogOUT":50}
-        self.updateVolumes()
+# ~ class Client():
+    # ~ def __init__(self, **kwargs):
+        # ~ self.wavFiles = kwargs["wavFiles"] if "wavFiles" in kwargs else []
+        # ~ self.name = kwargs["name"]
+        # ~ self.IP = kwargs["IP"] if "IP" in kwargs else self.name + ".local"
+        # ~ self.status = kwargs["status"] if "status" in kwargs else "inconnu"
+        # ~ self.midiNote = kwargs["midiNote"] if "midiNote" in kwargs else 65
+        # ~ self.volumes = kwargs["volumes"] if "volumes" in kwargs else {"microphone":50, "analogIN":50, "transducer":50, "analogOUT":50}
+        # ~ self.updateVolumes()
         
-    def setVolume(self, channel, volume):
-        if channel in self.volumes.keys() :
-            OSCserver.sendOSC(self.IP, "/volume", [channel, volume])
-            self.volumes[channel] = volume
-        else : raise Error("unable to set volume for channel '%s'" % channel)
+    # ~ def setVolume(self, channel, volume):
+        # ~ if channel in self.volumes.keys() :
+            # ~ OSCserver.sendOSC(self.IP, "/volume", [channel, volume])
+            # ~ self.volumes[channel] = volume
+        # ~ else : raise Error("unable to set volume for channel '%s'" % channel)
         
-    def updateVolume(self):
-        OSCserver.sendOSC(self.IP, "/getVolumes")
+    # ~ def updateVolume(self):
+        # ~ OSCserver.sendOSC(self.IP, "/getVolumes")
     
-    def toDict(self):
-        return vars(self)
+    # ~ def toDict(self):
+        # ~ return vars(self)
 
+# refresh lastSeen, connected, status and IP of a device on heartbeat reception. If the device is unknown, ask for it's details
 def processHeartbeat(command, args, tags, IPaddress):
     global knownClients
     hostname = args[0]
     sendersIP = IPaddress.url.split("//")[1].split(":")[0] # retrieve IP from an url like osc.udp://10.0.0.12:35147/
-    if hostname not in knownClients or knownClients[hostname]["connected"] is False: 
+    if hostname in knownClients and "connected" not in knownClients[hostname].keys() : print("DEBUG no connected status : ",knownClients[hostname])
+    if hostname not in knownClients : 
         print("received heartbeat from %s (%s), asked for details" % (hostname, sendersIP))
         OSCserver.sendOSC(sendersIP, "/getInfos")
     else : 
         if sendersIP != knownClients[hostname]["IP"] : knownClients[hostname]["IP"] = sendersIP
-        knownClients[hostname]["status"] = "en ligne, vu le "+getDate()
+        knownClients[hostname]["status"] = "last "+getDate()
         knownClients[hostname]["lastSeen"] = time.time()
+        if knownClients[hostname]["connected"] is False : 
+            knownClients[hostname]["connected"] = True
+            print(hostname+" reconnected")
         # ~ print("received heartbeat from known client %s" % hostname)
     pass
 
+# called when device send it's details. Add new device to the knownClients and fill in it's parameters
 def processClientsInfos(command, args, tags, IPaddress):
     global knownClients
-    print("got info from {} : {}".format(IPaddress, args))
+    print("got info from {} : {}".format(IPaddress.url, args))
+    refreshUI = False
     hostname, midiNote, volMic, volAnalogIN, volTrans, volAnalogOUT = args
     IP = IPaddress.url.split("//")[1].split(":")[0] # retrieve IP from an url like osc.udp://10.0.0.12:35147/
     if hostname not in knownClients :
         print("adding new device %s to the known devices list")
         knownClients[hostname] = {}
+        knownClients[hostname]["name"] = hostname
         knownClients[hostname]["fileList"] = []
-    OSCserver.sendOSC(IP, "/getFileList")
-    knownClients[hostname]["IP"] = IP
-    knownClients[hostname]["midiNote"] = midiNote
-    knownClients[hostname]["volumes"] = [volMic, volAnalogIN, volTrans, volAnalogOUT]
-    knownClients[hostname]["status"] = "en ligne, vu le "+getDate()
-    # ~ knownClients[hostname]["lastSeen"] = datetime.datetime.now()
-    knownClients[hostname]["lastSeen"] = time.time()
-    knownClients[hostname]["connected"] = True
+        knownClients[hostname]["IP"] = IP
+        knownClients[hostname]["midiNote"] = midiNote
+        knownClients[hostname]["volumes"] = [volMic, volAnalogIN, volTrans, volAnalogOUT]
+        knownClients[hostname]["status"] = "last "+getDate()
+        knownClients[hostname]["connected"] = True
+        knownClients[hostname]["lastSeen"] = time.time()
+        OSCserver.sendOSC(IP, "/getFileList")
+        refreshUI = True
+    elif knownClients[hostname]["connected"] is False:
+        knownClients[hostname]["connected"] = True
+        knownClients[hostname]["lastSeen"] = time.time()
+        if knownClients[hostname]["IP"] != IP : knownClients[hostname]["IP"] = IP
+        knownClients[hostname]["fileList"] = []
+        print("%s has reconnected" % hostname)
+        OSCserver.sendOSC(IP, "/getFileList")
+        refreshUI = True
+    else : 
+        knownClients[hostname]["lastSeen"] = time.time()
+    
+    if refreshUI : UI.refreshDeviceList()
     print (knownClients)
 
+# called when a device sends it's wav file list, populates the fileList argument
 def processFileList(command, args, tags, IPaddress):
     hostname = args[0]
     if hostname not in knownClients :
@@ -126,33 +147,58 @@ def changeParameter(hostname, paramName, value):
         client[paramName] = value
         print("set {} {} to {}".format(hostname, paramName, value))
     else : print ("cannot update {} : unkown parameter".format(paramName))
-    
-def sendList():
-    pass
 
-def new(name, IP=None, status=None, midiNote=None, volumes = None,  ):
-    if not IP : IP=name+".local"
-    if not status : status = "en ligne depuis le " + getDate()
-    if not midiNote : midiNote = random.randrange(12, 127)
-    if not volumes : volumes=[0,0,0,0]
-    
+# send the OSC message to change device hostname and remove it from the knownHost list
+def changeHostname(oldHostname, newHostname):
+    global knownClients
+    sendOSC(oldHostname, "/changeHostname", newHostname)
+    del knownClients[oldHostname]
+    writeToFile()
+    print("deleted client %s" % oldHostname, knownClients.keys())
 
+# ~ def new(name, IP=None, status=None, midiNote=None, volumes = None,  ):
+    # ~ if not IP : IP=name+".local"
+    # ~ if not status : status = "en ligne depuis le " + getDate()
+    # ~ if not midiNote : midiNote = random.randrange(12, 127)
+    # ~ if not volumes : volumes=[0,0,0,0]
+    
+# return the actual date in human readable form
 def getDate(date = None):
     if not date : date = datetime.datetime.now()
     return date.strftime("%d %b %Y %H:%M:%S")
 
+# mark all known clients as disconnected and retrieve the last connected date via the lastSeen parameter (number of seconds since Epoch)
 def init():
     global knownClients
     print("  marking all known clients as disconnected ")
     currentTime = time.time()
     for name in knownClients :
-            knownClients[name]["connected"] = False
-            lastSeen = currentTime - knownClients[name]["lastSeen"]
-            lastConnected = datetime.datetime.now() - datetime.timedelta(seconds=lastSeen)
-            knownClients[name]["status"] = "déconnecté, vu pour la dernière fois le "+getDate(lastConnected)
+        print("initialising", knownClients[name])
+        knownClients[name]["connected"] = False
+        lastSeen = currentTime - knownClients[name]["lastSeen"]
+        lastConnected = datetime.datetime.now() - datetime.timedelta(seconds=lastSeen)
+        knownClients[name]["status"] = "déconnecté, vu pour la dernière fois le "+getDate(lastConnected)
     print("  asking for their ID")
     for name in knownClients : OSCserver.sendOSC(name+".local", "/getInfos")
 
+# clear the list of known clients and remove the associated file
+def forgetAll():
+    global knownClients
+    os.remove(knownClientsFile)
+    print("known clients file deleted")
+    knownClients = {}
+    readFromFile()
+    
+# reply to the sender with "/connectedClients hostname1 hostname2..." with the hostnames of connected clients
+def whoIsThere(command, args, tags, IPaddress):
+    connectedClients = [k for k in knownClients.keys() if knownClients[k]["connected"]]
+    OSCserver.sendOSC(IPaddress.url.split("//")[1].split(":")[0], "/connectedClients", connectedClients)
+
+# reply to the sender with "/connectedClients hostname1 hostname2..." with the hostnames of known clients, connected or not
+def sendKnownClients(command, args, tags, IPaddress):
+    OSCserver.sendOSC(IPaddress.url.split("//")[1].split(":")[0], "/knownClients", list(knownClients.keys()))
+
+# mark devices which heartbeat have not been received for more than two seconds
 def checkDisconnected():
     global knownClients
     while disconnectedThread :

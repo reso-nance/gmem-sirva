@@ -1,11 +1,12 @@
 $( document ).ready(function() {
     var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + '/home')  
     var connectedDevices = [];
-    var testModule = {name:"testModule", volumes:[25,50,75,100], IP:"10.0.0.42", midiNote:60, fileList:["testFile1.wav", "testFile2.wav", "testFile3.wav"], connected:true, lastSeen:"10/10/2019 09h23"}
-    var testModule2 = {name:"testModule2", volumes:[10,30,45,83], IP:"10.0.0.44", midiNote:53, fileList:["testFile1.wav", "testFile2.wav", "testFile3.wav"], connected:true, lastSeen:"10/10/2019 09h13"}
-    connectedDevices.push(testModule)
-    connectedDevices.push(testModule2)
+    //~ var testModule = {name:"testModule", volumes:[25,50,75,100], IP:"10.0.0.42", midiNote:60, fileList:["testFile1.wav", "testFile2.wav", "testFile3.wav"], connected:true, lastSeen:"10/10/2019 09h23"}
+    //~ var testModule2 = {name:"testModule2", volumes:[10,30,45,83], IP:"10.0.0.44", midiNote:53, fileList:["testFile1.wav", "testFile2.wav", "testFile3.wav"], connected:true, lastSeen:"10/10/2019 09h13"}
+    //~ connectedDevices.push(testModule)
+    //~ connectedDevices.push(testModule2)
     
+    // replace the midinote by an input tag
     $(document).on('click', '#midinote', function(event) {
         const hostname = ($(event.target).children('h3').text());
         var original_text = $(this).text();
@@ -15,19 +16,44 @@ $( document ).ready(function() {
         new_input.focus();
     });
     
-    // Replace the input class by a <div> and send the new name to the server when focus is lost
+    // Replace the input tag by a <div> and send the new name to the server when focus is lost
     $(document).on('blur', '.midinote-editor', function(event) {
         var new_input = $(this).val();
         const hostname = $(this).attr('id');
         const originalText = $(this).attr('data-original');
         var updated_text = $('<div class="module_infos" id="midinote">');
-        const midiNote = getMidiNoteNumber(hostname, new_input)
+        const midiNote = getMidiNoteNumber(hostname, new_input);
         // if the entered midi note is valid, get it's number and send it to the server
         if (midiNote) {
-            updated_text.html('<h3>'+new_input+'</h3');
-            socket.emit("midiNoteChanged", {hostname:encodeURIComponent(hostname), midinote:midiNote})
+            updated_text.html('<h3>'+new_input+'</h3>');
+            socket.emit("midiNoteChanged", {hostname:encodeURIComponent(hostname), midinote:midiNote});
         }
         else updated_text.html('<h3>'+originalText+'</h3>');
+        $(this).replaceWith(updated_text);
+	});
+    
+    // replace the hostname by an input tag
+    $(document).on('click', '.module-name', function(event) {
+        const hostname = ($(event.target).text());
+        var original_text = $(this).text();
+        var new_input = $('<input class="modulename-editor" id="'+hostname+'">');
+        new_input.append("<h1>");
+        new_input.val(original_text);
+        new_input.append("</h1>");
+        $(this).replaceWith(new_input);
+        new_input.focus();
+    });
+    
+    // Replace the input tag by a <div> and send the new name to the server when focus is lost
+    $(document).on('blur', '.modulename-editor', function(event) {
+        var new_input = $(this).val();
+        const hostname = $(this).attr('id');
+        var updated_text = $('<div class="module_infos module-name">');
+        const newHostname = getValidatedHostname(new_input);
+        updated_text.html('<h1>'+newHostname+'</h1>');
+        if (newHostname != hostname) {
+            socket.emit("hostnameChanged", {hostname:encodeURIComponent(hostname), newHostname:newHostname})
+        }
         $(this).replaceWith(updated_text);
 	});
 
@@ -68,7 +94,7 @@ $( document ).ready(function() {
         
 	// create module blocks when their <li> is clicked
 	$(document).on('click', '.list-group li', function(event) {
-        const moduleName = $(this).attr('data-moduleName');
+        const moduleName = $(this).attr('data-modulename');
         const module = connectedDevices.filter(function (mod) {return mod.name === moduleName});
 		if (module.length == 1) show_module(module[0]);
  	});	
@@ -86,9 +112,21 @@ $( document ).ready(function() {
         });
     });
     
-    // update sliders on server request
+    // update connected devices on server request
+    socket.on('deviceList', function(data) {
+        connectedDevices = Object.values(data);
+        updateDeviceList();
+    });
     
-        
+    // update sliders on server request
+    socket.on('refreshVolumes', function(data) {
+        console.log("update volumes :", data)
+        const devIndex = connectedDevices.findIndex( mod => mod.name == data.hostname);
+        connectedDevices[devIndex].volumes = data.volumes;
+        for (var i=0; i<4; i++){
+            $('.slider:[data-moduleName="'+data.hostname+'"]:[data-type="'+i.toString()+'"]').val(data.volumes[i]);
+        }
+    });
         
     // returns a midi note number for the user-inputted text in the midinote field
     function getMidiNoteNumber(hostname, midiNote) {
@@ -133,11 +171,37 @@ $( document ).ready(function() {
         if (midiNote in nameToNumber) return nameToNumber[midiNote];
         else return false;
     }
+    
+    function getValidatedHostname(hostname){
+        hostname = hostname.replace(/\s/g, '-'); // replace spaces with hyphens
+        hostname = hostname.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // remove diacritics from unicode
+        hostname = hostname.replace(/[^a-zA-Z0-9-]/g,''); // remove the remaining special chars
+        if (hostname.length > 62) hostname = hostname.slice(0, 62); // max 63 characters
+        hostname = hostname.replace(/^\-/, ""); // remove the first hyphen if the hostname begins with an hyphen
+        return hostname;
+    }
+    
+    function updateDeviceList(){
+        var deviceList = $('<ul class="list-group cachelist" id="devices-list">');
+        var statusList = $('<ul class="list-group statuslist" id="status-list">');
+        connectedDevices.forEach(function(device){
+            const disabled = (device.connected) ? "" : '"class="disabled" tabindex="-1"';
+            deviceList.append('<li data-modulename="'+device.name+'"><a href="#" '+disabled+'>'+device.name+'</a></li>');
+            statusList.append('<li>'+device.status+'</li>');
+        });
+        deviceList.append('</ul>');
+        statusList.append('</ul>');
+        $("#devices-list").replaceWith(deviceList);
+        $("#status-list").replaceWith(statusList);
+        console.log("updated devices list :", connectedDevices);
+    }
+        
 
 });
 
 
 function show_module(module){
+    console.log("displaying module", module);
 	// affichage
 	if ( $( ".content #"+module.name ).length ) {
 		$(".content #"+module.name).remove();
@@ -146,7 +210,7 @@ function show_module(module){
 		$(".content").append('<element class= ui-module-container id = '+module.name+'></element>');
 		$("#"+module.name).append('<div class= ui-module-head></div>');
 		$("#"+module.name+" .ui-module-head").append('<div class= ui-module-id></div>');
-		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos><h1>'+module.name+'</h1></div>');
+		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class="module_infos module-name"><h1>'+module.name+'</h1></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos><h3>IP '+module.IP+'</h3></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = midiinfo><h3>notemidi </h3></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = midinote><h3>'+module.midiNote+'</h3></div>');
