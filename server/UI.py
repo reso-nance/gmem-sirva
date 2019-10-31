@@ -79,7 +79,10 @@ def rte_uploadAudio(hostname):
             print("successfully uploaded audio "+filename)
             cmd = "sshpass -p raspberry scp -oStrictHostKeyChecking=no ./tmp/%s pi@%s.local:/home/pi/client/wav/" % (filename, hostname)
             errCode = os.system(cmd)
-            if errCode == 0 : print("successfully copied the file %s to %s.local" % (filename, hostname))
+            if errCode == 0 :
+                print("successfully copied the file %s to %s.local" % (filename, hostname))
+                # ~ OSCserver.sendOSC(clients.knownClients[hostname]["IP"], "/getFileList") # to update the fileList on the UI
+                clients.sendOSC(hostname, "/getFileList") # to update the fileList on the UI
             else : print("could'nt copy the file %s to host %s" % (filename, hostname))
         except UploadNotAllowed:
             print("ERROR : this file is not an audio file ")
@@ -129,7 +132,9 @@ def changeMidiNote(data):
 def changeHostname(data):
     clients.changeHostname(data["hostname"], data["newHostname"])
     
-
+@socketio.on("playFile", namespace="/home")
+def playFile(data):
+    clients.sendOSC(data["hostname"], "/play", [urllib.parse.unquote(data["fileSelected"])])
 # --------------- FUNCTIONS ----------------
 
 def refreshDeviceList():
@@ -142,4 +147,6 @@ def refreshVolumes(command, args, tags, IPaddress):
     if hostname in clients.knownClients :
         clients.knownClients[hostname]["volumes"] = volumes
         socketio.emit("updateVolumes", {"hostname":hostname, "volumes":volumes})
-        
+
+def refreshFileList(hostname, fileList):
+    socketio.emit("updateFileList", {"hostname":hostname, "fileList":fileList})

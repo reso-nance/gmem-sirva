@@ -114,6 +114,7 @@ def processFileList(command, args, tags, IPaddress):
         knownClients[hostname]["fileList"] = []
         for f in args[1:] : knownClients[hostname]["fileList"].append(f)
         print("got filelist from {} : {}".format(hostname, args[1:]))
+        UI.refreshFileList(hostname, knownClients[hostname]["fileList"])
 
 def readFromFile():
     global knownClients
@@ -198,7 +199,7 @@ def whoIsThere(command, args, tags, IPaddress):
 def sendKnownClients(command, args, tags, IPaddress):
     OSCserver.sendOSC(IPaddress.url.split("//")[1].split(":")[0], "/knownClients", list(knownClients.keys()))
 
-# mark devices which heartbeat have not been received for more than two seconds
+# mark devices which heartbeat have not been received for more than five seconds
 def checkDisconnected():
     global knownClients
     while disconnectedThread :
@@ -206,7 +207,7 @@ def checkDisconnected():
         currentTime = time.time()
         for client in [c for c in knownClients if knownClients[c]["connected"]] :
             # ~ if (currentTime - client["lastSeen"]).total_seconds() > 2 : 
-            if currentTime - knownClients[client]["lastSeen"] > 2 : 
+            if currentTime - knownClients[client]["lastSeen"] > 5 : 
                 knownClients[client]["connected"] = False
                 knownClients[client]["status"] = "déconnecté depuis le "+getDate()
                 print("client %s is now marked as disconnected" % client)

@@ -112,15 +112,18 @@ $( document ).ready(function() {
         });
     });
     
-    // upload audio file
+    // file upload
 	$(document).on('change', '.upload', function(event) {
         $(this).closest('form').submit() //autosubmit the file upload form 
  	});	
     
-    //~ // upload audio file
-	//~ $(document).on('change', '.audio-upload', function(event) {
-        //~ const moduleName = $(this).attr('data-modulename');
- 	//~ });	
+    $(document).on('click', '#bplay', function(event) {
+        const moduleName = $(this).attr('data-modulename');
+        //~ const fileSelected = $("#"+moduleName+" .ui-module-details .wav-list ").find(".selectedwave .a")
+        const fileSelected = $("#"+moduleName+" .selectedwave").children("a").text()
+        console.log("playing file",fileSelected, "on module", moduleName);
+        socket.emit("playFile", {hostname:moduleName, fileSelected:encodeURIComponent(fileSelected)});
+    });
     
     // update connected devices on server request
     socket.on('deviceList', function(data) {
@@ -136,6 +139,12 @@ $( document ).ready(function() {
         for (var i=0; i<4; i++){
             $('.slider:[data-moduleName="'+data.hostname+'"]:[data-type="'+i.toString()+'"]').val(data.volumes[i]);
         }
+    });
+    
+    // update fileList on server request
+    socket.on('updateFileList', function(data) {
+        console.log("update fileList :", data)
+        updateFileList(data.hostname, data.fileList)
     });
         
     // returns a midi note number for the user-inputted text in the midinote field
@@ -205,8 +214,15 @@ $( document ).ready(function() {
         $("#status-list").replaceWith(statusList);
         console.log("updated devices list :", connectedDevices);
     }
+    
+    function updateFileList(moduleName, fileList) {
+        var fileListHTML = "";
+        fileList.forEach(function(file){
+            fileListHTML += '<li><a href=#>'+file+'</a></li>';
+        });
+        $("#"+moduleName+" .ui-module-details .wav-list ul").empty().append(fileListHTML);
+    }        
         
-
 });
 
 
@@ -225,7 +241,7 @@ function show_module(module){
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = midiinfo><h3>notemidi </h3></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = midinote><h3>'+module.midiNote+'</h3></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class=btns_up></div>');
-		$("#"+module.name+" .ui-module-head .ui-module-id .btns_up").append('<button class=btn id=bplay></button>');
+		$("#"+module.name+" .ui-module-head .ui-module-id .btns_up").append('<button class=btn id=bplay data-modulename="'+module.name+'"></button>');
 		$("#"+module.name+" #bplay").addClass("btn_play desactivated statelist");
 		$("#"+module.name+" .ui-module-head .ui-module-id .btns_up").append('<button class=btn id=bstop></button>');
 		$("#"+module.name+" #bstop").addClass("btn_stop desactivated statelist");

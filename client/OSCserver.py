@@ -102,7 +102,7 @@ def changeHostname(command, args, tags, IPaddress):
     sendID()
 
 def sendFileList(command, args, tags, IPaddress):
-    fileList = [myHostname] + [f.replace("wav/", "") for f in glob.glob("wav/*.wav")]
+    fileList = [myHostname] + [f.replace("wav/", "") for f in glob.glob("wav/*")]
     # ~ liblo.send(masterPiIP, "/filesList", *fileList)
     sendOSCtoServer("/filesList", fileList)
     print("sent file list {}".format(fileList))

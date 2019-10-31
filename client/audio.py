@@ -108,21 +108,21 @@ def shutdown_callback(status, reason):
     event.set()
 
 # play a wav file on the selected output using jack-play
-def playFile(OSCaddress, OSCargs):
+def playFile(command, OSCargs, tags, IPaddress):
+    print("playfile", OSCargs)
     if len(OSCargs) < 1 : return
     filename, output2 = OSCargs[0], None
+    if "wav/" not in filename : filename = "./wav/"+filename
     if len(OSCargs) == 1 : output = outputs["transducer"]
     elif len(OSCargs) == 2 : output = OSCargs[1]
     elif len(OSCargs) == 3 : output, output2 = OSCargs[1:]
-    assert output in outputs
     if output2 and output2 != output: 
-        assert output2 in outputs
         cmd = "JACK_PLAY_CONNECT_TO=system:playback_%d jack-play " + filename
-    else : cmd="JACK_PLAY_CONNECT_TO=%s jack-play %s" % (outputs[output], filename)
+    else : cmd="JACK_PLAY_CONNECT_TO=%s jack-play %s" % (output, filename)
     subprocess.Popen(cmd, shell=True)
 
 # mute, unmute and toggle channels using amixer
-def mute(OSCaddress, channels) :
+def mute(OSCaddress, channels) : #FIXME : should be command, OSCargs, tags, IPaddress ???
     for channel in channels :
         OSCaddress = OSCaddress.replace("/","")
         assert channel in alsaControls
@@ -135,7 +135,7 @@ def mute(OSCaddress, channels) :
         subprocess.Popen(cmd, shell=True)
 
 # set the volume of capture and playback devices using amixer
-def setVolume(OSCaddress, OSCargs):
+def setVolume(OSCaddress, OSCargs): #FIXME : should be command, OSCargs, tags, IPaddress ???
     print(OSCaddress, OSCargs)
     channel, volume = OSCargs
     assert channel in alsaControls
