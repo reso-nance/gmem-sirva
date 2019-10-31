@@ -102,9 +102,10 @@
 	left: 28px;
 }
 
-.statuslist >li{
+.statuslist >a{
 	font-weight: 400;
 	text-decoration: none;
+    pointer-events: none;
 	color: #666666;
 
 }

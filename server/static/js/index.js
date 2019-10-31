@@ -182,14 +182,14 @@ $( document ).ready(function() {
     }
     
     function updateDeviceList(){
-        var deviceList = $('<ul class="list-group cachelist" id="devices-list">');
+        var deviceList = $('<ol class="list-group cachelist" id="devices-list">');
         var statusList = $('<ul class="list-group statuslist" id="status-list">');
         connectedDevices.forEach(function(device){
             const disabled = (device.connected) ? "" : '"class="disabled" tabindex="-1"';
             deviceList.append('<li data-modulename="'+device.name+'"><a href="#" '+disabled+'>'+device.name+'</a></li>');
-            statusList.append('<li>'+device.status+'</li>');
+            statusList.append('<a href="#">'+device.status+'</a>');
         });
-        deviceList.append('</ul>');
+        deviceList.append('</ol>');
         statusList.append('</ul>');
         $("#devices-list").replaceWith(deviceList);
         $("#status-list").replaceWith(statusList);
