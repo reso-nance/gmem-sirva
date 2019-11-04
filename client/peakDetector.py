@@ -107,6 +107,7 @@ def listen() :
 
 # tries to close the stream without segfaulting
 def stopListening() :
+    global stream, p
     stream.stop_stream()
     stream.close()
     p.terminate()

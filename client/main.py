@@ -24,7 +24,7 @@
 
 from threading import Thread
 from time import sleep
-import signal, subprocess, atexit
+import signal, subprocess, atexit, os
 import OSCserver, peakDetector, audio
 
 oscServerThread = None
@@ -52,6 +52,7 @@ def exitCleanly():
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, exitCleanly) # register this exitCleanly function to be called on sigterm
     atexit.register(exitCleanly) # idem when called from within this script
+    if not os.path.isdir(audio.wavDir) : os.mkdir(audio.wavDir) # create the wav directory if it does'nt already exists
     print("starting the OSC server...")
     oscServerThread = Thread(target=OSCserver.listen)
     oscServerThread.start()
@@ -62,7 +63,7 @@ if __name__ == '__main__':
     peakDetectorThread = Thread(target=peakDetector.listen)
     peakDetectorThread.start()
     print("starting the JACK connection thread...")
-    JACKconnectionThread = Thread(target=audio.init)
+    JACKconnectionThread = Thread(target=audio.init, kwargs=audio.jackParameters)
     JACKconnectionThread.start()
     
     

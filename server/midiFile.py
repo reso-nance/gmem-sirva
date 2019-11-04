@@ -43,7 +43,7 @@ def importFromJson():
         noteTranslator = defaultNoteTranslator
         exportToJson(defaultNoteTranslator)
 
-def play(path, args, types, src):
+def play(OSCaddress, args, tags, IPAddress):
     global noteTranslator, readMidi
     if not noteTranslator : importFromJson()
     try : 
@@ -59,7 +59,7 @@ def play(path, args, types, src):
     except KeyboardInterrupt : raise
     except Exception as e : print(e)
     
-def stop(path, args, types, src) :
+def stop(OSCaddress, args, tags, IPAddress) :
     global readMidi
     readMidi = False
     print("stopping midi file parsing")
@@ -67,6 +67,15 @@ def stop(path, args, types, src) :
 
 def main(args):
     return 0
+
+def delete(OSCaddress, args, tags, IPAddress):
+    filePaths = [midiFolder+"/"+arg for arg in args]
+    for filePath in filePaths :
+        if os.path.isfile(filePath) : 
+            os.remove(filePath)
+            print("deleted file "+filePath)
+        else : print("cannot delete file {} : not found".format(filePath))
+        
 
 
 if __name__ == '__main__':

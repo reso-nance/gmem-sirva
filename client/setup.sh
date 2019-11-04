@@ -2,7 +2,7 @@
 # This script install dependancies and configure the network for the raspberry pi clients
 # usage : sudo bash setup.sh
 
-thisClientHostname=gmemClientTest
+thisClientHostname="gmemClientTest"
 
 if [[ $EUID -ne 0 ]]; then
    echo "Are you root enough ?" 
@@ -18,7 +18,7 @@ apt-get update||exit 1
 apt-get -y dist-upgrade||exit 1
 echo "
 installing .deb packages :"
-apt-get -y --fix-missing install python3-pip python3-dev  python3-rpi.gpio liblo-dev libasound2-dev libjack-jackd2-dev \
+apt-get -y --fix-missing install python3-pip python3-dev  python3-rpi.gpio liblo-dev libasound2-dev \
 libatlas-base-dev libportaudio0 libportaudio2 libportaudiocpp0 portaudio19-dev python3-spidev libjack0 jackd1 jack-tools||exit 1
 echo "
 installing pip packages :" # pip packages must be installed one by one to avoid dependencies issues
@@ -29,11 +29,6 @@ pip3 install pyaudio ||exit 2
 pip3 install JACK-client ||exit 2
 pip3 install soundfile ||exit 2
 
-#~ pip3 install flask||exit 2
-#~ pip3 install flask-socketio||exit 2
-#~ pip3 install flask-uploads||exit 2
-#~ pip3 install Cython||exit 2
-#~ pip3 install eventlet||exit 2
 
 echo "
 ------------DONE installing dependencies------------
@@ -61,7 +56,10 @@ raspi-config nonint do_hostname "$thisClientHostname"
 echo "
 ------------------ enabling SPI :-------------------
 "
-raspi-config nonint do_i2c 0
+#raspi-config nonint do_i2c 0 # doesn't work anymore on raspbian buster
+echo "
+dtparam=spi=on
+">>/boot/config.txt
 
 echo "
 --------------- disabling bluetooth :---------------
@@ -120,6 +118,12 @@ device_tree=bcm2710-rpi-3-b.dtb
 ----------finished installing realtime kernel :----------
 "
 fi
+    echo "
+--------------setting up script autolaunch:--------------
+"
+echo"
+su pi -c '/usr/bin/python3 /home/pi/client/main.py'
+">>/etc/rc.local
 
 echo "
 ----------------------------------------------------

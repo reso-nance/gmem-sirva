@@ -27,25 +27,27 @@
 # jackd -P70 -p16 -t2000 -dalsa -dhw:U192k -p128 -n3 -r96000 -s
 
 # ~ import sys, signal, os, jack, threading, subprocess
-import jack, threading, subprocess, time, queue
+import jack, threading, subprocess, time, os
 from datetime import datetime
 import soundfile as sf
 import OSCserver
 
 soundcardName = "U192k" # soundcard name in ALSA, as listed by aplay -l
+wavDir = "wav"
 client, event, jackServerThread, connections = None, None, None, None
 alsaIndex = None
 clientStarted = False
+isPlaying = False
 xrunCounter, xrunSum = 0, 0
 startTime = datetime.now()
 inputs = {"microphone":"system:capture_1", "analogIN": "system:capture_2"}
 outputs = {"transducer":"system:playback_1", "analogOUT":"system:playback_2"}
 alsaControls = {"microphone": "'Mic',0", "analogIN":"'Mic',1", "transducer":"'UMC202HD 192k Output',0", "analogOUT":"'UMC202HD 192k Output',1"}
+jackParameters={"soundcard":soundcardName, "sampleRate":96000, "bufferSize":256, "bufferCount":3, "priority":80, "timeout":2000, "maxClients":2048}
+# ~ jackParameters={"soundcard":soundcardName, "sampleRate":48000, "bufferSize":128, "bufferCount":2, "priority":80, "timeout":2000, "maxClients":2048}
 
-def init(soundcard=soundcardName, sampleRate=96000, bufferSize=256,
-         bufferCount=2, priority=70, timeout=2000, maxClients=16):
-# ~ def init(soundcard=soundcardName, sampleRate=48000, bufferSize=1024,
-         # ~ bufferCount=4, priority=70, timeout=2000, maxClients=16):
+
+def init(soundcard, sampleRate, bufferSize, bufferCount, priority, timeout, maxClients):
     global client, event, jackServerThread, clientStarted
     # launching jack server
     jackServerCmd = "jackd --realtime -P{} -p{} -t{} -dalsa -dhw:{} -p{} -n{} -r{} &".format(priority, maxClients, timeout,soundcard, bufferSize, bufferCount, sampleRate)
@@ -81,15 +83,23 @@ def init(soundcard=soundcardName, sampleRate=96000, bufferSize=256,
         # ~ close()
 
 # will use jackd to connect hardware inputs to outputs
-def route(OSCaddress, OSCargs):
+def route(OSCaddress, OSCargs, tags, IPaddress):
+    global client
     if len(OSCargs)!= 2 : return False
     input, output = OSCargs
     assert input in inputs and output in outputs
+    print("routing %s to %s (%s => %s)" % (input, output, inputs[input], outputs[output]))
     if clientStarted :
         client.connect(inputs[input], outputs[output])
         return True
     else : return False
-    
+
+def disconnect(OSCaddress, OSCargs, tags, IPaddress):
+    global client
+    if clientStarted and len(OSCargs) == 2 :
+        input, output = OSCargs
+        if input in inputs and output in outputs : client.disconnect(inputs[input], outputs[output])
+
 # registered on xrun, will keep track of the number of xrun occured since launch
 def xrun_callback(delayedMicros):
     global xrunCounter, xrunSum
@@ -109,20 +119,28 @@ def shutdown_callback(status, reason):
 
 # play a wav file on the selected output using jack-play
 def playFile(command, OSCargs, tags, IPaddress):
+    global isPlaying
     print("playfile", OSCargs)
     if len(OSCargs) < 1 : return
     filename, output2 = OSCargs[0], None
-    if "wav/" not in filename : filename = "./wav/"+filename
+    if wavDir+"/" not in filename : filename = wavDir+"/"+filename
     if len(OSCargs) == 1 : output = outputs["transducer"]
-    elif len(OSCargs) == 2 : output = OSCargs[1]
-    elif len(OSCargs) == 3 : output, output2 = OSCargs[1:]
+    elif len(OSCargs) == 2 : output = outputs[OSCargs[1]]
+    elif len(OSCargs) == 3 : output, output2 = outputs[OSCargs[1]], outputs[OSCargs[2]]
     if output2 and output2 != output: 
         cmd = "JACK_PLAY_CONNECT_TO=system:playback_%d jack-play " + filename
     else : cmd="JACK_PLAY_CONNECT_TO=%s jack-play %s" % (output, filename)
+    if isPlaying : stop()
+    isPlaying = True
     subprocess.Popen(cmd, shell=True)
 
+def stop(command=None, OSCargs=None, tags=None, IPaddress=None):
+    global isPlaying
+    subprocess.Popen("pkill jack-play", shell=True)
+    if isPlaying : isPlaying = False
+
 # mute, unmute and toggle channels using amixer
-def mute(OSCaddress, channels) : #FIXME : should be command, OSCargs, tags, IPaddress ???
+def mute(OSCaddress, channels, tags, IPaddress) :
     for channel in channels :
         OSCaddress = OSCaddress.replace("/","")
         assert channel in alsaControls
@@ -135,7 +153,7 @@ def mute(OSCaddress, channels) : #FIXME : should be command, OSCargs, tags, IPad
         subprocess.Popen(cmd, shell=True)
 
 # set the volume of capture and playback devices using amixer
-def setVolume(OSCaddress, OSCargs): #FIXME : should be command, OSCargs, tags, IPaddress ???
+def setVolume(OSCaddress, OSCargs, tags, IPaddress):
     print(OSCaddress, OSCargs)
     channel, volume = OSCargs
     assert channel in alsaControls
@@ -161,13 +179,22 @@ def getAmixerControl(control, delimiter) :
     line = next(line for line in out.splitlines() if line.startswith(delimiter)) # extract line beginning with delimiter
     line = int(line.split(" [")[1].split("%]")[0])# strip the number between brackets and convert it to int [94%] -> 94
     return line
+    
+def delete(OSCaddress, args, tags, IPaddress):
+    filePaths = [wavDir+"/"+arg for arg in args]
+    for path in filePaths :
+        if os.path.isfile(path) :
+            os.remove(path)
+            print("deleted file "+path)
+        else : print("cannot delete file {} : not found".format(path))
 
 # called when exiting
-def close():    
+def close():
+    global client
     runningSince = datetime.now() - startTime
     runningSince = runningSince.total_seconds() / 3600
     xrunPerHour = xrunCounter / runningSince
     if xrunCounter > 0 : 
         print( "xruns stats : total %i xruns, %.02f xruns/h, mean duration : %i micros" % (xrunCounter, xrunPerHour, int(xrunSum/xrunCounter)) )
-    client.deactivate()
+    if client : client.deactivate()
     subprocess.Popen("pkill jackd", shell=True)

@@ -5,17 +5,30 @@ mot de passe (sensible à la casse) : bbqCvsN8
 Les arguments notés [entre crochets] sont facultatifs, les types OSC sont notés entre parenthèses
 
 Côté serveur :
+Le serveur est joignable à l'IP 10.0.0.1 au sein du réseau wifi ou par son nom d'hôte masterpi.local. Il écoute sur le port 8000.
+
 /clients : demande au serveur une liste de clients connectés. Le serveur répondra par un message OSC sur le port 9000 contenant en argument le nom de tous les clients actuellement connectés
+
 /shutdown : demande l'extinction du serveur et de tous ses clients
+
 /readMidi : lit instantanément un fichier midi préalablement stocké sur l'ensemble des machines
           (str) nomDuFichier : nom du fichier midi stocké sur le serveur (sensible à la casse)
-/stopMidi : stoppe instantanément la lecture du fichier midi
+
+/stopMidi : stoppe instantanément la lecture du fichier midi en cours
+
+/delete : supprime un fichier midi du serveur
+         (str) nomDuFichier : nom du fichier midi stocké sur le serveur (sensible à la casse)
+         (str) [nomDuFichier] : plusieurs noms de fichiers peuvent être donnés en même temps
+         ex : /delete fichier1.mid fichier2.mid fichier3.mid
+
 /whoIsThere : renvoie à l'expéditeur sur le port 9000 le message OSC "/connectedClients" contenant la liste des appareils actuellement connectés
+
 /knownClients : renvoie à l'expéditeur sur le port 9000 le message OSC "/knownClients" contenant la liste de tous les appareils connus, connectés ou non
 
 Côté client :
-Le client peut-être directement contacté par son nom d'hôte au sein du réseau wifi.
+Les clients peut-être directement contacté par son nom d'hôte au sein du réseau wifi. Ce nom peut être édité sur l'interface web.
 Par exemple, pour un client nommé "bidule", les messages OSC peuvent être envoyés à "bidule.local" au lieu de "192.168.0.24"
+Chaque client écoute sur le port 9000.
 
 /solenoid : pulse le solénoide une fois
          (int) [durée] : durée d'activation du solénoïde en ms. Limitée en interne pour éviter la surchauffe du solénoïde
@@ -26,11 +39,23 @@ Par exemple, pour un client nommé "bidule", les messages OSC peuvent être envo
           (str) [sortie audio] : sortie utilisée pour lire le fichier son, par défaut celle du transducteur. Peut être soit "transducer" soit "analogOUT", sensible à la casse
           (str) [sortie audio2] : seconde sortie utilisée pour lire le fichier son simultanément. Peut être soit "transducer" soit "analogOUT", sensible à la casse
            ex : /play groovyTune.wav analogOUT
+           
+/stop : stoppe instantanément la lecture du fichier wav en cours
 
+/delete : supprime un fichier audio du serveur
+         (str) nomDuFichier : nom du fichier audio stocké sur le serveur (sensible à la casse)
+         (str) [nomDuFichier] : plusieurs noms de fichiers peuvent être donnés en même temps
+         ex : /delete fichier1.wav fichier2.wav fichier3.wav
+         
 /route : connecte une entrée audio à une sortie audio
         (str) nomDeLentrée : peut être soit "microphone" soit "analogIN", sensible à la casse
         (str) nomDeLaSortie : peut être soit "transducer" soit "analogOUT", sensible à la casse
          ex : /route microphone transducer
+         
+/disconnect : déconnecte le routing effectué entre une entrée audio et une sortie audio
+        (str) nomDeLentrée : peut être soit "microphone" soit "analogIN", sensible à la casse
+        (str) nomDeLaSortie : peut être soit "transducer" soit "analogOUT", sensible à la casse
+         ex : /disconnect microphone transducer
 
 /mute : coupe le son de l'entrée ou la sortie sélectionnée
      (str) nom : peut être "microphone", "analogIN", "transducer", "analogOUT", sensible à la casse
@@ -52,6 +77,6 @@ Par exemple, pour un client nommé "bidule", les messages OSC peuvent être envo
         (int) volume 0~100 : inaudible à 0%, plein volume à 100%, courbe logarithmique.
          ex : /volume analogOUT 87
 
-/shutdown : demande l'extinction de la machine
+/shutdown : provoque l'extinction de la machine
 
 

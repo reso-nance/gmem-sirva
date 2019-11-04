@@ -23,8 +23,8 @@
 #  
 
 from threading import Thread
-import eventlet, atexit, signal
-import OSCserver, UI, clients
+import eventlet, atexit, signal, os
+import OSCserver, UI, clients, midiFile
 
 flaskBind = "10.0.0.1"
 HTTPlisteningPort = 8080
@@ -43,6 +43,8 @@ def exitCleanly():
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, exitCleanly) # register this exitCleanly function to be called on sigterm
     atexit.register(exitCleanly) # idem when called from within this script
+    if not os.path.isdir(midiFile.midiFolder) : os.mkdir(midiFile.midiFolder)
+    if not os.path.isdir("tmp") : os.mkdir("tmp") # this dir will store the wav files to be dispatched on clients
     # ~ eventlet.spawn(OSCserver.listen)
     oscServerThread = Thread(target=OSCserver.listen)
     oscServerThread.start()

@@ -54,6 +54,7 @@ def listen():
         
     server.add_method("/readMidi", None, midiFile.play)
     server.add_method("/stopMidi", None, midiFile.stop)
+    server.add_method("/delete", None, midiFile.delete)
     server.add_method("/whoIsThere", None, clients.whoIsThere)
     server.add_method("/knownClients", None, clients.sendKnownClients)
     server.add_method("/heartbeat", None, clients.processHeartbeat)
@@ -76,7 +77,7 @@ def sendOSC(IPaddress, command, args=None):
 
 def shutdown(IPaddress, command, args):
     print("asked to shutdown via OSC by {}".format(IPaddress))
-    for client in clients.knownClients :
+    for client in clients.knownClients.values() :
         for i in range(3) : # we send it thrice for good luck
             sendOSC(client["IP"], "/shutdown")
             time.sleep(.3)

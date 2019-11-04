@@ -53,11 +53,14 @@ def listen():
         
     server.add_method("/solenoid", None, solenoid.actuate) # ex1 : /solenoid | ex2 : /solenoid 50 (pulse duration in ms)
     server.add_method("/play", None, audio.playFile) # ex : /readAudio myfile.wav [transducer] : if no output is named, defaults to transducer
+    server.add_method("/stop", None, audio.stop) # ex : /stop
     server.add_method("/route", None, audio.route) # ex : /route analogIN analogOUT
+    server.add_method("/disconnect", None, audio.disconnect) # ex : /unroute analogIN
     server.add_method("/mute", None, audio.mute) # ex : /mute analogOUT
     server.add_method("/unmute", None, audio.mute) # ex : /unmute analogOUT
     server.add_method("/toggle", None, audio.mute) # ex : /toggle analogOUT
     server.add_method("/volume", None, audio.setVolume) # ex : /volume analogOUT 96
+    server.add_method("/delete", None, deleteAudioFile) # ex : /volume analogOUT 96
     server.add_method("/shutdown", None, shutdown) # ex : /volume analogOUT 96
     server.add_method("/getFileList", None, sendFileList) # ex : /volume analogOUT 96
     server.add_method("/getInfos", None, sendID) # ex : /volume analogOUT 96
@@ -84,14 +87,14 @@ def sendOSCtoServer(command, args=None):
     if args : liblo.send(masterPiIP, command, *args)
     else : liblo.send(masterPiIP, command)
 
-def shutdown(IPaddress, command, args) :
+def shutdown(command, args, tags, IPaddress) :
     print("asked for shutdown via OSC from {}".format(IPaddress))
     os.system("sudo shutdown now &")
     raise SystemExit
 
 def changeHostname(command, args, tags, IPaddress):
     global myHostname
-    hostname = args
+    hostname = args[0]
     print("asked to change hostname from %s to %s" % (myHostname, hostname))
     os.system("sudo raspi-config nonint do_hostname \"%s\"" % hostname)
     errCode = 1
@@ -107,7 +110,7 @@ def sendFileList(command, args, tags, IPaddress):
     sendOSCtoServer("/filesList", fileList)
     print("sent file list {}".format(fileList))
 
-def sendID():
+def sendID(command=None, args=None, tags=None, IPaddress=None):
     args = [myHostname, midinote]
     args += audio.getVolumes()
     sendOSCtoServer("/myID", args)
@@ -115,6 +118,10 @@ def sendID():
      
 def refreshVolumes():
     sendOSCtoServer("/myVolumes", [myHostname]+audio.getVolumes())
+
+def deleteAudioFile(OSCaddress, args, tags, IPaddress):
+    audio.delete(OSCaddress, args, tags, IPaddress)
+    sendFileList(OSCaddress, args, tags, IPaddress)
 
 def getLocalIP(): # a bit hacky but still does the job
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

@@ -52,7 +52,7 @@ def setGPIOhigh(duration) :
     GPIO.output(pin, GPIO.LOW)
     return
     
-def actuate(OSCaddress, OSCargs):
+def actuate(OSCaddress, OSCargs, tags, IPaddress):
     if len(OSCargs) == 0 : duration=durationMax
     elif len(OSCargs) == 1 :
         try : duration = int(OSCargs[0])
