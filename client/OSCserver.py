@@ -117,7 +117,7 @@ def sendID(command=None, args=None, tags=None, IPaddress=None):
     # ~ liblo.send(masterPiIP, "/myID", *args)
      
 def refreshVolumes():
-    sendOSCtoServer("/myVolumes", [myHostname]+audio.getVolumes())
+    sendOSCtoServer("/myVolumes", audio.getVolumes())
 
 def deleteAudioFile(OSCaddress, args, tags, IPaddress):
     audio.delete(OSCaddress, args, tags, IPaddress)

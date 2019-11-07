@@ -43,6 +43,7 @@ startTime = datetime.now()
 inputs = {"microphone":"system:capture_1", "analogIN": "system:capture_2"}
 outputs = {"transducer":"system:playback_1", "analogOUT":"system:playback_2"}
 alsaControls = {"microphone": "'Mic',0", "analogIN":"'Mic',1", "transducer":"'UMC202HD 192k Output',0", "analogOUT":"'UMC202HD 192k Output',1"}
+# ~ alsaOutputVolumes = {"transducer":0, "analogOUT":0} # outputs volumes are stored here to be restored when unmuted since these two channels are linked in alsa (left-right)
 jackParameters={"soundcard":soundcardName, "sampleRate":96000, "bufferSize":256, "bufferCount":3, "priority":80, "timeout":2000, "maxClients":2048}
 # ~ jackParameters={"soundcard":soundcardName, "sampleRate":48000, "bufferSize":128, "bufferCount":2, "priority":80, "timeout":2000, "maxClients":2048}
 
@@ -140,7 +141,7 @@ def stop(command=None, OSCargs=None, tags=None, IPaddress=None):
     if isPlaying : isPlaying = False
 
 # mute, unmute and toggle channels using amixer
-def mute(OSCaddress, channels, tags, IPaddress) :
+def mute(OSCaddress, channels, tags, IPaddress) : #FIXME : muting of output channel must be done manually
     for channel in channels :
         OSCaddress = OSCaddress.replace("/","")
         assert channel in alsaControls
@@ -153,22 +154,30 @@ def mute(OSCaddress, channels, tags, IPaddress) :
         subprocess.Popen(cmd, shell=True)
 
 # set the volume of capture and playback devices using amixer
-def setVolume(OSCaddress, OSCargs, tags, IPaddress):
+def setVolume(OSCaddress=None, OSCargs=None, tags=None, IPaddress=None):
     print(OSCaddress, OSCargs)
     channel, volume = OSCargs
-    assert channel in alsaControls
-    assert volume in range(101)
-    cmd = "amixer -Dhw:{} -q set {} {}%".format(soundcardName, alsaControls[channel], volume) #FIXME : outputs should use amixer sset Master 80%,20% to balance
-    subprocess.Popen(cmd, shell=True)
-    OSCserver.refreshVolumes()
+    if channel in alsaControls and volume in range(101) :
+        volume = int(volume/100*60+40) # map 0~100 to 40~100 since in alsa a volume below 40% is pretty much inaudible
+        print("setting volume %s to %i" %(channel, volume))
+        if channel in ("transducer", "analogOUT"): # since output volumes are controlled by LR balance :
+            transducer, analogOUT = getVolumes()[2:] # we need to get volume of both outputs
+            outputsVolumes = {"transducer":transducer, "analogOUT":analogOUT} # store them into a dict
+            outputsVolumes[channel] = volume # then replace the one we need
+            cmd = "amixer -Dhw:{} -q set 'UMC202HD 192k Output' {}%,{}%".format(soundcardName, outputsVolumes["transducer"], outputsVolumes["analogOUT"]) # then set them both a the same time
+        else : cmd = "amixer -Dhw:{} -q set {} {}%".format(soundcardName, alsaControls[channel], volume)
+        subprocess.Popen(cmd, shell=True)
+        OSCserver.refreshVolumes()
 
 def getVolumes():
     volumes = [0,0,0,0]
-    findLine = lambda txt, delimiter : next(line for line in txt.splitlines() if line.startswith(delimiter))
+    # ~ findLine = lambda txt, delimiter : next(line for line in txt.splitlines() if line.startswith(delimiter))
     volumes[0] = getAmixerControl("Mic,0", "  Front Left: Capture")
     volumes[1] = getAmixerControl("Mic,1", "  Mono: Capture")
     volumes[2] = getAmixerControl("UMC202HD 192k Output", "  Front Left: Playback")
     volumes[3] = getAmixerControl("UMC202HD 192k Output", "  Front Right: Playback")
+    remap = lambda x : int((x-40)/60*100) # remap from 40~100 to 0~100
+    map(remap, volumes)
     return volumes
     
 def getAmixerControl(control, delimiter) :

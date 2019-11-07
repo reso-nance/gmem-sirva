@@ -135,6 +135,12 @@ def changeHostname(data):
 @socketio.on("playFile", namespace="/home")
 def playFile(data):
     clients.sendOSC(data["hostname"], "/play", [urllib.parse.unquote(data["fileSelected"])])
+    
+@socketio.on("stopFile", namespace="/home")
+def stopFile(hostname):
+    hostname = urllib.parse.unquote(hostname)
+    clients.sendOSC(hostname, "/stop")
+    
 # --------------- FUNCTIONS ----------------
 
 def refreshDeviceList():
@@ -142,11 +148,13 @@ def refreshDeviceList():
     print("updated UI device list")
 
 def refreshVolumes(command, args, tags, IPaddress):
-    hostname = args[0]
-    volumes = args[1:]
-    if hostname in clients.knownClients :
-        clients.knownClients[hostname]["volumes"] = volumes
-        socketio.emit("updateVolumes", {"hostname":hostname, "volumes":volumes})
+    IP = IPaddress.url.split("//")[1].split(":")[0] # retrieve IP from an url like osc.udp://10.0.0.12:35147/
+    for client in clients.knownClients.values():
+        if client["IP"] == IP :
+            hostname = client["name"]
+            print("refreshing UI volumes for client {} : {}".format(hostname, args))
+            clients.knownClients[hostname]["volumes"] = args
+            socketio.emit("refreshVolumes", {"hostname":hostname, "volumes":args}, namespace='/home')
 
 def refreshFileList(hostname, fileList):
-    socketio.emit("updateFileList", {"hostname":hostname, "fileList":fileList})
+    socketio.emit("updateFileList", {"hostname":hostname, "fileList":fileList}, namespace='/home')

@@ -119,10 +119,14 @@ $( document ).ready(function() {
     
     $(document).on('click', '#bplay', function(event) {
         const moduleName = $(this).attr('data-modulename');
-        //~ const fileSelected = $("#"+moduleName+" .ui-module-details .wav-list ").find(".selectedwave .a")
         const fileSelected = $("#"+moduleName+" .selectedwave").children("a").text()
         console.log("playing file",fileSelected, "on module", moduleName);
         socket.emit("playFile", {hostname:moduleName, fileSelected:encodeURIComponent(fileSelected)});
+    });
+    
+    $(document).on('click', '#bstop', function(event){
+        const moduleName = $(this).attr('data-modulename');
+        socket.emit("stopFile", encodeURIComponent(moduleName));
     });
     
     // update connected devices on server request
@@ -133,11 +137,11 @@ $( document ).ready(function() {
     
     // update sliders on server request
     socket.on('refreshVolumes', function(data) {
-        console.log("update volumes :", data)
+        console.log("refreshing volumes for", data.hostname, ":", data.volumes);
         const devIndex = connectedDevices.findIndex( mod => mod.name == data.hostname);
         connectedDevices[devIndex].volumes = data.volumes;
         for (var i=0; i<4; i++){
-            $('.slider:[data-moduleName="'+data.hostname+'"]:[data-type="'+i.toString()+'"]').val(data.volumes[i]);
+            $('.slider [data-moduleName="'+data.hostname+'"] [data-type="'+i.toString()+'"]').val(data.volumes[i]);
         }
     });
     
@@ -243,7 +247,7 @@ function show_module(module){
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class=btns_up></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id .btns_up").append('<button class=btn id=bplay data-modulename="'+module.name+'"></button>');
 		$("#"+module.name+" #bplay").addClass("btn_play desactivated statelist");
-		$("#"+module.name+" .ui-module-head .ui-module-id .btns_up").append('<button class=btn id=bstop></button>');
+		$("#"+module.name+" .ui-module-head .ui-module-id .btns_up").append('<button class=btn id=bstop data-modulename="'+module.name+'"></button>');
 		$("#"+module.name+" #bstop").addClass("btn_stop desactivated statelist");
 		$("#"+module.name+" .ui-module-head .ui-module-id .btns_down").append('<button class=btn id=badd></button>');
 		$("#"+module.name+" #badd").addClass("btn_add desactivated statelist");
@@ -261,7 +265,7 @@ function show_module(module){
 		// volumes
 		$("#"+module.name+" .ui-module-details").append('<div class="ui-module-vols volsout" style="flex-grow:1">');
 		$("#"+module.name+" .volsout").append('<div class="bloc-vol" style=flex-grow:1><h2>transducteur out</h2><input class="slider" type="range" min=0 max=100 value='+module.volumes[2]+' data-type=2 data-moduleName="'+module.name+'" /></div>');
-		$("#"+module.name+" .volsout").append('<div class=bloc-vol style=flex-grow:1><h2>analog in </h2><input class="slider" type="range" min=0 max=100 value='+module.volumes[3]+' data-type=3 data-moduleName="'+module.name+'" /></div>');
+		$("#"+module.name+" .volsout").append('<div class=bloc-vol style=flex-grow:1><h2>analog out </h2><input class="slider" type="range" min=0 max=100 value='+module.volumes[3]+' data-type=3 data-moduleName="'+module.name+'" /></div>');
 		// wave list
 		$("#"+module.name+" .ui-module-details").append('<div class=wav-list id=liste>');
 		$("#"+module.name+" .ui-module-details .wav-list").append('<ul class=col2></ul>');
