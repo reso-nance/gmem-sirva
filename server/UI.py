@@ -79,13 +79,7 @@ def rte_uploadAudio(hostname):
         try :
             filename = uploadSets["audio"].save(request.files['audiofile'])
             print("successfully uploaded audio "+filename)
-            cmd = "sshpass -p raspberry scp -oStrictHostKeyChecking=no ./tmp/%s pi@%s.local:/home/pi/client/wav/" % (filename, hostname)
-            errCode = os.system(cmd)
-            if errCode == 0 :
-                print("successfully copied the file %s to %s.local" % (filename, hostname))
-                # ~ OSCserver.sendOSC(clients.knownClients[hostname]["IP"], "/getFileList") # to update the fileList on the UI
-                clients.sendOSC(hostname, "/getFileList") # to update the fileList on the UI
-            else : print("could'nt copy the file %s to host %s" % (filename, hostname))
+            socketio.emit("uploadSuccessful", filename, namespace="/home")
         except UploadNotAllowed:
             print("ERROR : this file is not an audio file ")
             return('<script>alert("Erreur : le fichier selectionné n\'est pas un fichier wav ou mp3");window.location = "/";</script>')
@@ -165,6 +159,17 @@ def midiAction(data):
     fileName = urllib.parse.unquote(data["fileName"])
     OSCserver.sendOSCtoLocalhost("/"+action, [fileName])
     
+@socketio.on("dispatchFileToClients", namespace="/home")
+def dispatchFileToClients(data):
+    filename = urllib.parse.unquote(data["filename"])
+    clientList = [urllib.parse.unquote(c) for c in data["clientList"]]
+    if os.isfile(audioFilesDir+"/"+filename) :
+        for hostname in clientList : sendFileToClient(filename, hostname)
+        os.remove(audioFilesDir+"/"+filename)
+        socketio.emit("successfullDispatch",{"filename":filename, "hostname":hostname}, namespace = "/home")
+    else : print("ERROR dispatching %s to %s : file not found"%(filename, hostname))
+    
+    
 # --------------- FUNCTIONS ----------------
 
 def refreshDeviceList():
@@ -186,4 +191,17 @@ def refreshFileList(hostname, fileList):
 def sendMidiFileList():
     midiFilesList = []
     for ext in ("mid", "MID", "Mid") : midiFilesList += glob.glob(midiFilesDir+"/*."+ext)
+    midiFilesList = [f.replace(midiFilesDir+"/", "") for f in midiFilesList] # remove dir name from fileList
     socketio.emit("midiFilesList", midiFilesList, namespace='/home')
+
+def sendFileToClient(filename, hostname):
+    tries = 0
+    while tries < 4 :
+        cmd = "sshpass -p raspberry scp -oStrictHostKeyChecking=no %s/%s pi@%s.local:/home/pi/client/wav/" % (audioFilesDir, filename, hostname)
+        if os.system(cmd) == 0 : 
+            print("succesfully dispatched %s to %s"%(filename, hostname))
+            clients.sendOSC(hostname, "/getFileList") # to update the fileList on the UI
+            return True
+        else : tries+=1
+    print("dispatching of %s to %s via sFTP failed 3 times in a row"%(filename, hostname))
+    return False
