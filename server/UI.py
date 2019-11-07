@@ -25,11 +25,13 @@ from flask import Flask, g, render_template, redirect, request, url_for, copy_cu
 from flask_socketio import SocketIO, emit
 from flask_uploads import UploadSet, configure_uploads, UploadNotAllowed
 # ~ import os, logging, subprocess, eventlet
-import os, logging, subprocess, urllib.parse
+import os, logging, subprocess, urllib.parse, glob
 import clients
 # ~ eventlet.monkey_patch() # needed to make eventlet work asynchronously with socketIO, 
 
 mainTitle = "GMEM || CIRVA || Réso-nance"
+midiFilesDir = "./midiFiles"
+audioFilesDir = "./tmp"
 
 if __name__ == '__main__':
     raise SystemExit("this file is made to be imported as a module, not executed")
@@ -44,9 +46,9 @@ log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 # flask-upload
 audioFiles = UploadSet(name='audioFiles', extensions=('wav', 'WAV', 'Wav', 'mp3', 'MP3', 'Mp3', 'ogg', 'OGG', 'Ogg'))
-app.config['UPLOADED_AUDIOFILES_DEST'] = "./tmp"
+app.config['UPLOADED_AUDIOFILES_DEST'] = audioFilesDir
 midiFiles = UploadSet(name='audioFiles', extensions=('MID', 'mid', 'Mid'))
-app.config['UPLOADED_MIDIFILES_DEST'] = "./midiFiles"
+app.config['UPLOADED_MIDIFILES_DEST'] = midiFilesDir
 configure_uploads(app, (audioFiles, midiFiles))
 uploadSets={"audio":audioFiles, "midi": midiFiles}
 
@@ -107,6 +109,7 @@ def rte_uploadMidi():
 def onConnect():
     print("client connected, session id : "+request.sid)
     refreshDeviceList()
+    sendMidiFileList()
 
 @socketio.on('disconnect', namespace='/home')
 def onDisconnect():
@@ -141,6 +144,26 @@ def stopFile(hostname):
     hostname = urllib.parse.unquote(hostname)
     clients.sendOSC(hostname, "/stop")
     
+@socketio.on("playMidi", namespace="/home")
+def playMidi(fileName):
+    fileName = urllib.parse.unquote(fileName)
+    OSCserver.sendOSCtoLocalhost("/readMidi", [fileName])
+
+@socketio.on("stopMidi", namespace="/home")
+def stopMidi(fileName):
+    fileName = urllib.parse.unquote(fileName)
+    OSCserver.sendOSCtoLocalhost("/stopMidi", [fileName])
+    
+@socketio.on("deleteMidi", namespace="/home")
+def deleteMidi(fileName):
+    fileName = urllib.parse.unquote(fileName)
+    OSCserver.sendOSCtoLocalhost("/delete", [fileName])
+    
+@socketio.on("midiAction", namespace="/home")
+def midiAction(data):
+    fileName = urllib.parse.unquote(data["fileName"])
+    OSCserver.sendOSCtoLocalhost("/"+action, [fileName])
+    
 # --------------- FUNCTIONS ----------------
 
 def refreshDeviceList():
@@ -158,3 +181,8 @@ def refreshVolumes(command, args, tags, IPaddress):
 
 def refreshFileList(hostname, fileList):
     socketio.emit("updateFileList", {"hostname":hostname, "fileList":fileList}, namespace='/home')
+
+def sendMidiFileList():
+    midiFilesList = []
+    for ext in ("mid", "MID", "Mid") : midiFilesList += glob.glob(midiFilesDir+"/*."+ext)
+    socketio.emit("midiFilesList", midiFilesList, namespace='/home')

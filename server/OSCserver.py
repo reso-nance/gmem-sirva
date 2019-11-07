@@ -75,6 +75,10 @@ def sendOSC(IPaddress, command, args=None):
         print("sending OSC {} to {}".format(command, IPaddress))
         liblo.send((IPaddress, sendPort), command)
 
+def sendOSCtoLocalhost(command, args=None):
+    if args : liblo.send(("127.0.0.1", listenPort), command, *args)
+    else : liblo.send(("127.0.0.1", listenPort), command)
+
 def shutdown(IPaddress, command, args):
     print("asked to shutdown via OSC by {}".format(IPaddress))
     for client in clients.knownClients.values() :

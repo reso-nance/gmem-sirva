@@ -25,23 +25,15 @@
 import mido, json, os
 import OSCserver
 
-midiToHostnames = "midi-hostnames.json"
 midiFolder = "./midiFiles"
-noteTranslator = None
-defaultNoteTranslator = {50:{"hostname":"gmemClientTest"}} # 60 is middle C
+noteTranslator = {} # will be populated by midiNote:IP
 readMidi = True
 
-def exportToJson(data):
-    with open (midiToHostnames, "w") as f : json.dump(data, f)
-
-def importFromJson():
+def updateNoteTranslator(knownClients):
     global noteTranslator
-    if os.path.isfile(midiToHostnames): 
-        with open(midiToHostnames, "r") as fp: noteTranslator = json.load(fp)
-    else :
-        print("file %s not found, switching back to defaults" % midiToHostnames)
-        noteTranslator = defaultNoteTranslator
-        exportToJson(defaultNoteTranslator)
+    noteTranslator = {}
+    for client in knownClients.values() : noteTranslator.update({client["midiNote"]:client["IP"]})
+    print("updated MIDI note translator :", noteTranslator)
 
 def play(OSCaddress, args, tags, IPAddress):
     global noteTranslator, readMidi
@@ -55,7 +47,7 @@ def play(OSCaddress, args, tags, IPAddress):
                 if not readMidi : return
                 if msg.type == "note_on" :
                     if msg.note in noteTranslator :
-                        OSCserver.sendOSC(noteTranslator[msg.note]+".local", "solenoid", [msg.velocity])
+                        OSCserver.sendOSC(noteTranslator[msg.note], "solenoid", [msg.velocity])
     except KeyboardInterrupt : raise
     except Exception as e : print(e)
     

@@ -8,7 +8,7 @@ $( document ).ready(function() {
     
     // replace the midinote by an input tag
     $(document).on('click', '#midinote', function(event) {
-        const hostname = ($(event.target).children('h3').text());
+        const hostname = $(this).attr("data-hostname");
         var original_text = $(this).text();
         var new_input = $('<input class="midinote-editor" id="'+hostname+'" data-original="'+original_text+'">');
         new_input.val(original_text);
@@ -26,6 +26,7 @@ $( document ).ready(function() {
         // if the entered midi note is valid, get it's number and send it to the server
         if (midiNote) {
             updated_text.html('<h3>'+new_input+'</h3>');
+            console.log("changed midi note to",midiNote, "for device", hostname);
             socket.emit("midiNoteChanged", {hostname:encodeURIComponent(hostname), midinote:midiNote});
         }
         else updated_text.html('<h3>'+originalText+'</h3>');
@@ -151,6 +152,11 @@ $( document ).ready(function() {
         updateFileList(data.hostname, data.fileList)
     });
         
+    // update midi file List on server request
+    socket.on('midiFilesList', function(midiFileList) {
+        console.log("update midi fileList :", midiFileList)
+    });
+        
     // returns a midi note number for the user-inputted text in the midinote field
     function getMidiNoteNumber(hostname, midiNote) {
         // try to parse an int (ex "63")
@@ -243,7 +249,7 @@ function show_module(module){
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class="module_infos module-name"><h1>'+module.name+'</h1></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos><h3>IP '+module.IP+'</h3></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = midiinfo><h3>notemidi </h3></div>');
-		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = midinote><h3>'+module.midiNote+'</h3></div>');
+		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = midinote data-hostname="'+module.name+'"><h3>'+module.midiNote+'</h3></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class=btns_up></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id .btns_up").append('<button class=btn id=bplay data-modulename="'+module.name+'"></button>');
 		$("#"+module.name+" #bplay").addClass("btn_play desactivated statelist");

@@ -24,7 +24,7 @@
 
 # ~ from threading import Thread
 import json, os, datetime, random, time
-import OSCserver, UI
+import OSCserver, UI, midiFile
 knownClientsFile = "knownClients.json"
 knownClients = {}
 disconnectedThread = True
@@ -90,6 +90,7 @@ def processClientsInfos(command, args, tags, IPaddress):
         knownClients[hostname]["lastSeen"] = time.time()
         OSCserver.sendOSC(IP, "/getFileList")
         refreshUI = True
+        midiFile.updateNoteTranslator(knownClients)
     elif knownClients[hostname]["connected"] is False:
         knownClients[hostname]["connected"] = True
         knownClients[hostname]["lastSeen"] = time.time()
@@ -121,6 +122,7 @@ def readFromFile():
     if os.path.isfile(knownClientsFile) :
         with open(knownClientsFile) as json_file : data = json.load(json_file)
         knownClients = data
+        midiFile.updateNoteTranslator(knownClients)
     else :
         print("known clients file %s not found, creating a new one" % knownClientsFile)
         writeToFile()
@@ -147,6 +149,7 @@ def changeParameter(hostname, paramName, value):
     if paramName in client :
         client[paramName] = value
         print("set {} {} to {}".format(hostname, paramName, value))
+        if paramName == "midiNote" : midiFile.updateNoteTranslator(knownClients)
     else : print ("cannot update {} : unkown parameter".format(paramName))
 
 # send the OSC message to change device hostname and remove it from the knownHost list
@@ -181,6 +184,7 @@ def init():
         knownClients[name]["status"] = "déconnecté, vu pour la dernière fois le "+getDate(lastConnected)
     print("  asking for their ID")
     for name in knownClients : OSCserver.sendOSC(name+".local", "/getInfos")
+    midiFile.updateNoteTranslator(knownClients)
 
 # clear the list of known clients and remove the associated file
 def forgetAll():
