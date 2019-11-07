@@ -52,6 +52,7 @@ def listen():
         raise SystemError
         
     server.add_method("/solenoid", None, solenoid.actuate) # ex1 : /solenoid | ex2 : /solenoid 50 (pulse duration in ms)
+    server.add_method("/noteOn", None, noteOn) # ex1 : /solenoid | ex2 : /solenoid 50 (pulse duration in ms)
     server.add_method("/play", None, audio.playFile) # ex : /readAudio myfile.wav [transducer] : if no output is named, defaults to transducer
     server.add_method("/stop", None, audio.stop) # ex : /stop
     server.add_method("/route", None, audio.route) # ex : /route analogIN analogOUT
@@ -158,6 +159,8 @@ def writeMidiNote():
     with open(filename, "w+") as f : f.write("le numéro de la note midi de cet appareil doit se trouver dans le nom de fichier, précédé du mot 'midinote'\nEx: 'midinote64.txt'")
     print("written midinote to file %s" % filename)
 
+def noteOn(OSCaddress, args, tags, IPaddress):
+    solenoid.noteOn(args[0])
 
 if __name__ == '__main__':
     print("this file is made to be imported as a module, not executed")

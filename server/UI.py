@@ -158,6 +158,7 @@ def stopMidi(fileName):
 def deleteMidi(fileName):
     fileName = urllib.parse.unquote(fileName)
     OSCserver.sendOSCtoLocalhost("/delete", [fileName])
+    sendMidiFileList()
     
 @socketio.on("midiAction", namespace="/home")
 def midiAction(data):

@@ -48,24 +48,24 @@ def setGPIOhigh(duration) :
     duration = min(durationMax, max(durationMin, duration))
     print("on", duration, "ms")
     GPIO.output(pin, GPIO.HIGH)
-    time.sleep(duration)
+    time.sleep(duration/1000)# ms to seconds 
     GPIO.output(pin, GPIO.LOW)
     return
     
-def actuate(OSCaddress, OSCargs, tags, IPaddress):
-    if len(OSCargs) == 0 : duration=durationMax
-    elif len(OSCargs) == 1 :
-        try : duration = int(OSCargs[0])
-        except ValueError : 
-            try : duration = float(OSCargs[0])
-            except : duration = durationMax
+def actuate(OSCaddress=None, OSCargs=None, tags=None, IPaddress=None, duration=None):
+    if not duration : # called from the OSCserver
+        if len(OSCargs) == 0 : duration=durationMax
+        elif len(OSCargs) == 1 :
+            try : duration = int(OSCargs[0])
+            except ValueError : 
+                try : duration = float(OSCargs[0])
+                except : duration = durationMax
     Thread(target=setGPIOhigh, args=(duration,)).start() 
     
 
 def noteOn(velocity) :
-    duration = velocity/255*(durationMax-durationMin)+durationMin # map 0~255 -> durationMin~durationMax
-    duration = duration /1000. # from ms to seconds
-    actuate(duration)
+    duration = int(velocity/127*(durationMax-durationMin)+durationMin) # map 0~127 -> durationMin~durationMax
+    actuate(duration=duration)
     
 if __name__ == '__main__':
     print("this file is made to be imported as a module, not executed")

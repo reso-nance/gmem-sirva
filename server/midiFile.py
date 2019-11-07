@@ -47,7 +47,7 @@ def play(OSCaddress, args, tags, IPAddress):
                 if not readMidi : return
                 if msg.type == "note_on" :
                     if msg.note in noteTranslator :
-                        OSCserver.sendOSC(noteTranslator[msg.note], "solenoid", [msg.velocity])
+                        OSCserver.sendOSC(noteTranslator[msg.note], "/noteOn", [msg.velocity])
     except KeyboardInterrupt : raise
     except Exception as e : print(e)
     
