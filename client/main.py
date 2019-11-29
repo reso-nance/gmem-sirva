@@ -49,6 +49,8 @@ def exitCleanly():
     
     raise SystemExit
 
+
+
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, exitCleanly) # register this exitCleanly function to be called on sigterm
     atexit.register(exitCleanly) # idem when called from within this script
@@ -66,7 +68,7 @@ if __name__ == '__main__':
     JACKconnectionThread = Thread(target=audio.init, kwargs=audio.jackParameters)
     JACKconnectionThread.start()
     
-    
+
     while True :
         try : sleep(1)
         except KeyboardInterrupt : exitCleanly()
