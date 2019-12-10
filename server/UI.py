@@ -26,7 +26,7 @@ from flask_socketio import SocketIO, emit
 from flask_uploads import UploadSet, configure_uploads, UploadNotAllowed
 # ~ import os, logging, subprocess, eventlet
 import os, logging, subprocess, urllib.parse, glob
-import clients
+import clients, OSCserver
 # ~ eventlet.monkey_patch() # needed to make eventlet work asynchronously with socketIO, 
 
 mainTitle = "GMEM || CIRVA || Réso-nance"
@@ -69,22 +69,27 @@ def rte_trk(ID):
     filePath = os.path.abspath(os.path.dirname(__file__)) + "/static/trk.jpg"
     return send_file(filePath, mimetype='image/jpg')
     
-@app.route('/uploadAudio/<string:hostname>', methods=['GET', 'POST'])
-def rte_uploadAudio(hostname):
+# @app.route('/uploadAudio/<string:hostname>', methods=['GET', 'POST'])
+# def rte_uploadAudio(hostname):
+@app.route('/uploadAudio/', methods=['GET', 'POST'])
+def rte_uploadAudio():
     if request.method == 'POST' and 'audiofile' in request.files:
-        hostname = urllib.parse.unquote(hostname)
-        if hostname not in clients.knownClients or clients.knownClients[hostname]["connected"] == False :
-            print("tried to send an audio file to an unknown or disconnected host :" + hostname)
-            return('<script>alert("Erreur : l\'appareil sélectionné n\'est pas en ligne");window.location = "/";</script>')
+        # hostname = urllib.parse.unquote(hostname)
+        # if hostname not in clients.knownClients or clients.knownClients[hostname]["connected"] == False and hostname != "server":
+        #     print("tried to send an audio file to an unknown or disconnected host :" + hostname)
+        #     return('<script>alert("Erreur : l\'appareil sélectionné n\'est pas en ligne");window.location = "/";</script>')
         try :
             filename = uploadSets["audio"].save(request.files['audiofile'])
             print("successfully uploaded audio "+filename)
             socketio.emit("uploadSuccessful", filename, namespace="/home")
         except UploadNotAllowed:
             print("ERROR : this file is not an audio file ")
+            socketio.emit("uploadNotAllowed")
             return('<script>alert("Erreur : le fichier selectionné n\'est pas un fichier wav ou mp3");window.location = "/";</script>')
         return redirect('#')
-        
+
+
+
 @app.route('/uploadMidi/', methods=['GET', 'POST'])
 def rte_uploadMidi():
     if request.method == 'POST' and "midifile" in request.files:
@@ -136,7 +141,11 @@ def playFile(data):
 @socketio.on("stopFile", namespace="/home")
 def stopFile(hostname):
     hostname = urllib.parse.unquote(hostname)
-    clients.sendOSC(hostname, "/stop")
+    clients.sendOSC(hostname, "/stop")  
+
+@socketio.on("deleteFile", namespace="/home")
+def deleteFile(data):
+    clients.sendOSC(data["hostname"], "/delete", [urllib.parse.unquote(data["fileSelected"])])
     
 @socketio.on("playMidi", namespace="/home")
 def playMidi(fileName):
@@ -157,18 +166,22 @@ def deleteMidi(fileName):
 @socketio.on("midiAction", namespace="/home")
 def midiAction(data):
     fileName = urllib.parse.unquote(data["fileName"])
-    OSCserver.sendOSCtoLocalhost("/"+action, [fileName])
+    OSCserver.sendOSCtoLocalhost("/"+data["action"], [fileName])
     
 @socketio.on("dispatchFileToClients", namespace="/home")
 def dispatchFileToClients(data):
     filename = urllib.parse.unquote(data["filename"])
     clientList = [urllib.parse.unquote(c) for c in data["clientList"]]
-    if os.isfile(audioFilesDir+"/"+filename) :
+    if os.path.isfile(audioFilesDir+"/"+filename) :
         for hostname in clientList : sendFileToClient(filename, hostname)
         os.remove(audioFilesDir+"/"+filename)
         socketio.emit("successfullDispatch",{"filename":filename, "hostname":hostname}, namespace = "/home")
     else : print("ERROR dispatching %s to %s : file not found"%(filename, hostname))
-    
+
+@socketio.on("refreshClients", namespace="/home")
+def refreshClients():
+    print("asked from UI to refresh client list")
+    clients.forgetAll(clearCache=True)
     
 # --------------- FUNCTIONS ----------------
 

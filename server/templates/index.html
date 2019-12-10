@@ -4,7 +4,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="serveur web du projet 'paysage de propagations'">
+    <meta name="description" content="serveur web du projet 'Paysage de Propagation'">
     <meta name="author" content="reso-nance.org">
 <!-- TODO 
     <link rel="icon" href="../static/favicon.png">
@@ -20,47 +20,83 @@
     
   </head>
   <body>
-  <div class="col-gauche">
-    <div class="p-2 menu" style="flex-grow: 2"><!-- start menu gauche -->
-    <div class="head">
-      <button class="btn btn_power"></button>
-      <button class="btn btn_refresh"></button>
-    </div>
+  <div class="row">
+    <!-- ////////////////////////////// LEFT PART ////////////////////////////////////////////////////////////////////// -->
+    <div class="col menuLeft">
+      <div class="logo"></div>
+      <h1>Modules de propagation</h1>
+      <div class="btn gestionFiles">
+        <button class="btn btn_power"></button>
+        <button class="btn btn_refresh"></button>
+        <form  class="btn_gestionfiles"  method=POST enctype=multipart/form-data action="/uploadMidi">
+          <label class="btn btn_wavefile desactivated statelist upload">
+              <input type="file"  name="midifile" style="display:none;">
+              <img src="static/imgs/btn_midifile.png" width=44 height=44>
+          </label>
+        </form>
+        <form  class="btn_gestionfiles"  method=POST enctype=multipart/form-data action="/uploadAudio">
+          <label class="btn btn_wavefile desactivated statelist upload">
+              <input type="file"  name="audiofile" style="display:none;">
+              <img src="static/imgs/btn_wavefile.png" width=44 height=44>
+          </label>
+        </form>
+        <button class="btn btn_playmidi"></button>
+      </div>
       <div class="bloc-lists">
-        <ul class="list-group cachelist" id="devices-list" >
-         <!-- devices will be inserted here -->
-        </ul>
-
-        <ul class="list-group statuslist" id="status-list">
-           <!-- statuses will be inserted here -->
-        </ul>
-<!--
-        <button type="button" class="btn btn-success audio-upload" data-modulename="test">UPLOAD WAV</button>
--->
-        <form  method=POST enctype=multipart/form-data action="/uploadAudio/gmemClientTest">
-            <label class="btn btn-success upload" data-modulename="test">
-                <input type="file" name="audiofile" style="display:none;">
-                Upload Wav
-            </label>
-        </form>
-
-        <form  method=POST enctype=multipart/form-data action="/uploadMidi">
-            <label class="btn btn-info upload">
-                <input type="file" name="midifile" style="display:none;">
-                Upload MIDI
-            </label>
-        </form>
         
-      </div> 
-    </div><!-- end menu gauche -->
-    <!-- start page droite-->
-    <div class="content">
-      <!-- ELEMNTS MODULE----------------------------------------------------------------------------------------------------------------->
-     
-      <!-- ELEMNTS END MODULE---------------------------------------------------------------------------------------------->
-      <!-- end page droite -->
-  </div>
+        <ol class="list-group cachelist" id="devices-list" >
+        <!-- devices will be inserted here -->
+        </ol>
+        <!-- - btn a virer -->
+      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#wavDispatch">Open modal</button>
+      </div>
+    </div><!-- end leftpart -->
 
+    <!-- ////////////////////////////// RIGHT PART ///////////////////////////////////////////////////////////////////// -->
+    <div class="col ContentRight">
+        <div class="content"></div>
+    </div><!-- end rightpart -->
+    <!-- The Modal -->
+    <div class="modal" id="wavDispatch">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h1 class="modal-title">Transfert de : <span id='wavDispatchName'>Fusce.wav</span></h1>
+        </div>
+
+        <!-- Modal body -->
+        <div class="modal-body">
+          <div class="listemodal">
+            <ul id="wavDispatchList">  
+              <li class="checkbox moduleslist"><label><input type="checkbox" value="">module 1</label></li>
+              <li class="checkbox moduleslist"><label><input type="checkbox" value="">module 2</label></li>
+              <li class="checkbox moduleslist"><label><input type="checkbox" value="">module 3</label></li>
+              <li class="checkbox moduleslist"><label><input type="checkbox" value="">module 4</label></li>
+              <li class="checkbox moduleslist"><label><input type="checkbox" value="">module 5</label></li>
+              <li class="checkbox moduleslist"><label><input type="checkbox" value="">module 6</label></li>
+              <li class="checkbox moduleslist"><label><input type="checkbox" value="">module 7</label></li>
+              <li class="checkbox moduleslist"><label><input type="checkbox" value="">module 8</label></li>
+              <li class="checkbox moduleslist"><label><input type="checkbox" value="">module 9</label></li>
+              <li class="checkbox moduleslist"><label><input type="checkbox" value="">module 10</label></li>
+            </ul>
+          </div>
+         </div> 
+        </div>
+      </div> 
+      
+
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger pull-right" data-dismiss="modal" id="modalSend">Transferer</button>
+        </div>
+
+        </div>
+      </div>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script type= "text/javascript" src="static/js/index.js"></script>
 
 

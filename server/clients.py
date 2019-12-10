@@ -67,7 +67,7 @@ def processHeartbeat(command, args, tags, IPaddress):
         if knownClients[hostname]["connected"] is False : 
             knownClients[hostname]["connected"] = True
             print(hostname+" reconnected")
-        # ~ print("received heartbeat from known client %s" % hostname)
+        # print("received heartbeat from known client %s" % hostname)
     pass
 
 # called when device send it's details. Add new device to the knownClients and fill in it's parameters
@@ -187,9 +187,9 @@ def init():
     midiFile.updateNoteTranslator(knownClients)
 
 # clear the list of known clients and remove the associated file
-def forgetAll():
+def forgetAll(clearCache=True):
     global knownClients
-    os.remove(knownClientsFile)
+    if clearCache : os.remove(knownClientsFile)
     print("known clients file deleted")
     knownClients = {}
     readFromFile()

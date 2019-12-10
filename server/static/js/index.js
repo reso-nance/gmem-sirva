@@ -1,14 +1,17 @@
 $( document ).ready(function() {
     var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + '/home')  
     var connectedDevices = [];
-    //~ var testModule = {name:"testModule", volumes:[25,50,75,100], IP:"10.0.0.42", midiNote:60, fileList:["testFile1.wav", "testFile2.wav", "testFile3.wav"], connected:true, lastSeen:"10/10/2019 09h23"}
-    //~ var testModule2 = {name:"testModule2", volumes:[10,30,45,83], IP:"10.0.0.44", midiNote:53, fileList:["testFile1.wav", "testFile2.wav", "testFile3.wav"], connected:true, lastSeen:"10/10/2019 09h13"}
-    //~ connectedDevices.push(testModule)
-    //~ connectedDevices.push(testModule2)
+    var testModule = {name:"testModule", volumes:[25,50,75,100], IP:"10.0.0.42", midiNote:60,status:'connecté', fileList:["testFile1.wav", "testFile2.wav", "testFile3.wav"], connected:true, lastSeen:"10/10/2019 09h23"}
+    var testModule2 = {name:"testModule2", volumes:[10,30,45,83], IP:"10.0.0.44", midiNote:53, status:'non-connecté',fileList:["testFile1.wav", "testFile2.wav", "testFile3.wav"], connected:false, lastSeen:"10/10/2019 09h13"}
+    connectedDevices.push(testModule);
+    connectedDevices.push(testModule2);
+    $("#wavDispatch").hide()
+    // pour test !!!
+    updateDeviceList();
     
     // replace the midinote by an input tag
     $(document).on('click', '#midinote', function(event) {
-        const hostname = $(this).attr("data-hostname");
+        const hostname = ($(event.target).children('h3').text());
         var original_text = $(this).text();
         var new_input = $('<input class="midinote-editor" id="'+hostname+'" data-original="'+original_text+'">');
         new_input.val(original_text);
@@ -26,7 +29,6 @@ $( document ).ready(function() {
         // if the entered midi note is valid, get it's number and send it to the server
         if (midiNote) {
             updated_text.html('<h3>'+new_input+'</h3>');
-            console.log("changed midi note to",midiNote, "for device", hostname);
             socket.emit("midiNoteChanged", {hostname:encodeURIComponent(hostname), midinote:midiNote});
         }
         else updated_text.html('<h3>'+originalText+'</h3>');
@@ -78,19 +80,14 @@ $( document ).ready(function() {
 	$(document).on('click', '.col2 li a', function(event) {
 		var parent_module = ( $(this).closest('.ui-module-container'));
  		// remove class selected for all list
- 		if ($(parent_module).find( "li" ).hasClass("selectedwave"))
- 		{
- 			$(parent_module).find( "li" ).removeClass("selectedwave");
- 			$(parent_module).find( "li" ).addClass("unselectedwave");
- 			// set btn_play / stop active
- 			$(parent_module).find( ".btn_play" ).removeClass("desactivated");
- 			$(parent_module).find( ".btn_play" ).addClass("activated");
- 		}
+ 		$(this).parents('ul').children('li').removeClass("selectedwave");
+        $(this).parent().addClass("selectedwave");
+        // activate btns functions remove play delete
+        parent_module.find('.btn_delete').css("opacity", "0.7");
+        
 
- 		// add remove class selected on selection
- 		$( this ).parent().removeClass("unselectedwave");
- 		$( this ).parent().addClass("selectedwave");
- 		// change alert
+        //alert(file_name);
+
  	});	
         
 	// create module blocks when their <li> is clicked
@@ -116,18 +113,40 @@ $( document ).ready(function() {
     // file upload
 	$(document).on('change', '.upload', function(event) {
         $(this).closest('form').submit() //autosubmit the file upload form 
- 	});	
-    
+        console.log("submitted form",$(this).closest('form'))
+     });
+
+     
+     $(document).on('click', '#modalSend', function(event){
+        var clientList = [];
+        $('#checkboxes input:checked').each(function() {
+            clientList.push($(this).attr('data-moduleName'));
+        });
+        const filename = $("#wavDispatchName").text();
+        console.log("dispatching", filename, "file to", clientList);
+        socket.emit("dispatchFileToClients", {"filename":filename, "clientList":clientList});
+     });
+
     $(document).on('click', '#bplay', function(event) {
         const moduleName = $(this).attr('data-modulename');
+        //~ const fileSelected = $("#"+moduleName+" .ui-module-details .wav-list ").find(".selectedwave .a")
         const fileSelected = $("#"+moduleName+" .selectedwave").children("a").text()
         console.log("playing file",fileSelected, "on module", moduleName);
         socket.emit("playFile", {hostname:moduleName, fileSelected:encodeURIComponent(fileSelected)});
     });
-    
-    $(document).on('click', '#bstop', function(event){
+
+    $(document).on('click', '#bstop', function(event) {
         const moduleName = $(this).attr('data-modulename');
-        socket.emit("stopFile", encodeURIComponent(moduleName));
+        console.log("stop playing wav on module", moduleName);
+        socket.emit("stopFile", moduleName);
+    });
+
+    $(document).on('click', '#bdelete', function(event) {
+        const moduleName = $(this).attr('data-modulename');
+        //~ const fileSelected = $("#"+moduleName+" .ui-module-details .wav-list ").find(".selectedwave .a")
+        const fileSelected = $("#"+moduleName+" .selectedwave").children("a").text()
+        console.log("deleting file",fileSelected, "on module", moduleName);
+        socket.emit("deleteFile", {hostname:moduleName, fileSelected:encodeURIComponent(fileSelected)});
     });
     
     // update connected devices on server request
@@ -138,7 +157,7 @@ $( document ).ready(function() {
     
     // update sliders on server request
     socket.on('refreshVolumes', function(data) {
-        console.log("refreshing volumes for", data.hostname, ":", data.volumes);
+        console.log("update volumes :", data)
         const devIndex = connectedDevices.findIndex( mod => mod.name == data.hostname);
         connectedDevices[devIndex].volumes = data.volumes;
         for (var i=0; i<4; i++){
@@ -151,12 +170,29 @@ $( document ).ready(function() {
         console.log("update fileList :", data)
         updateFileList(data.hostname, data.fileList)
     });
-        
-    // update midi file List on server request
-    socket.on('midiFilesList', function(midiFileList) {
-        console.log("update midi fileList :", midiFileList)
+
+    // open modal when a wav file is received on the server side
+    socket.on('uploadSuccessful', function(filename) {
+        console.log("upload successful :", filename, "opening modal...")
+        // updating modal content
+        var deviceList = $('<ul id="wavDispatchList">');
+        connectedDevices.forEach(function(device){
+            deviceList.append('<li class="checkbox moduleslist"><label><input type="checkbox" value="" data-moduleName='+device.name+'>'+device.name+'</label></li>"');
+        })
+        deviceList.append("</ol>");
+        $("#wavDispatchList").replace(deviceList);
+        $("#wavDispatchName").text(filename);
+        $("#wavDispatch").modal();
     });
-        
+    
+    socket.on("successfullDispatch", function(data){
+        console.log("successfully dispatched", data.filename, "to", data.hostname);
+        if (data.filename == $("#wavDispatchName").text()) {
+            console.log("selected label :",$('"#wavDispatchList label[data-moduleName='+data.hostname+']"'));
+            $('"#wavDispatchList label[data-moduleName='+data.hostname+']"').css('color', 'green');
+        }
+    })
+
     // returns a midi note number for the user-inputted text in the midinote field
     function getMidiNoteNumber(hostname, midiNote) {
         // try to parse an int (ex "63")
@@ -212,16 +248,16 @@ $( document ).ready(function() {
     
     function updateDeviceList(){
         var deviceList = $('<ol class="list-group cachelist" id="devices-list">');
-        var statusList = $('<ul class="list-group statuslist" id="status-list">');
+        //var statusList = $('<ul class="list-group statuslist" id="status-list">');
         connectedDevices.forEach(function(device){
             const disabled = (device.connected) ? "" : '"class="disabled" tabindex="-1"';
-            deviceList.append('<li data-modulename="'+device.name+'"><a href="#" '+disabled+'>'+device.name+'</a></li>');
-            statusList.append('<a href="#">'+device.status+'</a>');
+            deviceList.append('<li data-modulename="'+device.name+'"><a href="#" '+disabled+'>'+device.name+'</a><span class=statuslist> :: '+device.status+'</span></li>');
+            //
         });
         deviceList.append('</ol>');
-        statusList.append('</ul>');
+        //statusList.append('</ul>');
         $("#devices-list").replaceWith(deviceList);
-        $("#status-list").replaceWith(statusList);
+        //$("#status-list").replaceWith(statusList);
         console.log("updated devices list :", connectedDevices);
     }
     
@@ -231,7 +267,9 @@ $( document ).ready(function() {
             fileListHTML += '<li><a href=#>'+file+'</a></li>';
         });
         $("#"+moduleName+" .ui-module-details .wav-list ul").empty().append(fileListHTML);
-    }        
+    }
+
+
         
 });
 
@@ -239,25 +277,27 @@ $( document ).ready(function() {
 function show_module(module){
     console.log("displaying module", module);
 	// affichage
-	if ( $( ".content #"+module.name ).length ) {
-		$(".content #"+module.name).remove();
+	if ( $( ".ContentRight #"+module.name ).length ) {
+		$(".ContentRight #"+module.name).remove();
 	} else
 	{
-		$(".content").append('<element class= ui-module-container id = '+module.name+'></element>');
+		$(".ContentRight").append('<element class= ui-module-container id = '+module.name+'></element>');
 		$("#"+module.name).append('<div class= ui-module-head></div>');
 		$("#"+module.name+" .ui-module-head").append('<div class= ui-module-id></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class="module_infos module-name"><h1>'+module.name+'</h1></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos><h3>IP '+module.IP+'</h3></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = midiinfo><h3>notemidi </h3></div>');
-		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = midinote data-hostname="'+module.name+'"><h3>'+module.midiNote+'</h3></div>');
-		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class=btns_up></div>');
+		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = midinote><h3>'+module.midiNote+'</h3></div>');
+	       // btns play stop
+    	$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class=btns_up></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id .btns_up").append('<button class=btn id=bplay data-modulename="'+module.name+'"></button>');
 		$("#"+module.name+" #bplay").addClass("btn_play desactivated statelist");
 		$("#"+module.name+" .ui-module-head .ui-module-id .btns_up").append('<button class=btn id=bstop data-modulename="'+module.name+'"></button>');
 		$("#"+module.name+" #bstop").addClass("btn_stop desactivated statelist");
-		$("#"+module.name+" .ui-module-head .ui-module-id .btns_down").append('<button class=btn id=badd></button>');
-		$("#"+module.name+" #badd").addClass("btn_add desactivated statelist");
-		$("#"+module.name+" .ui-module-head .ui-module-id .btns_down").append('<button class=btn id=bdelete></button>');
+        // btns add delete
+        $("#"+module.name+" .ui-module-head .ui-module-id").append('<div class=btns_down></div>');
+        //$("#"+module.name+" #badd").addClass("btn_add desactivated statelist");
+		$("#"+module.name+" .ui-module-head .ui-module-id .btns_down").append('<button class=btn id="bdelete" data-modulename="'+module.name+'"></button>');
 		$("#"+module.name+" #bdelete").addClass("btn_delete desactivated statelist");
 		//
 		$("#"+module.name).append('<div class=ui-module-details></div>');
@@ -271,11 +311,11 @@ function show_module(module){
 		// volumes
 		$("#"+module.name+" .ui-module-details").append('<div class="ui-module-vols volsout" style="flex-grow:1">');
 		$("#"+module.name+" .volsout").append('<div class="bloc-vol" style=flex-grow:1><h2>transducteur out</h2><input class="slider" type="range" min=0 max=100 value='+module.volumes[2]+' data-type=2 data-moduleName="'+module.name+'" /></div>');
-		$("#"+module.name+" .volsout").append('<div class=bloc-vol style=flex-grow:1><h2>analog out </h2><input class="slider" type="range" min=0 max=100 value='+module.volumes[3]+' data-type=3 data-moduleName="'+module.name+'" /></div>');
+		$("#"+module.name+" .volsout").append('<div class=bloc-vol style=flex-grow:1><h2>analog in </h2><input class="slider" type="range" min=0 max=100 value='+module.volumes[3]+' data-type=3 data-moduleName="'+module.name+'" /></div>');
 		// wave list
 		$("#"+module.name+" .ui-module-details").append('<div class=wav-list id=liste>');
 		$("#"+module.name+" .ui-module-details .wav-list").append('<ul class=col2></ul>');
-        var fileList = ""
+        var fileList = "";
         module.fileList.forEach(function(file){
             fileList += '<li><a href=#>'+file+'</a></li>';
         });
