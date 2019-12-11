@@ -31,7 +31,7 @@ HTTPlisteningPort = 8080
 
 oscServerThread = None
 
-def exitCleanly():
+def exitCleanly(*args):
     print("writing known clients to file")
     clients.writeToFile()
     print("exiting disconnected thread")

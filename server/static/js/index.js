@@ -119,7 +119,8 @@ $( document ).ready(function() {
      
      $(document).on('click', '#modalSend', function(event){
         var clientList = [];
-        $('#checkboxes input:checked').each(function() {
+        console.log( $('#wavDispatchList'))
+        $('#wavDispatchList input:checked').each(function() {
             clientList.push($(this).attr('data-moduleName'));
         });
         const filename = $("#wavDispatchName").text();
@@ -148,7 +149,16 @@ $( document ).ready(function() {
         console.log("deleting file",fileSelected, "on module", moduleName);
         socket.emit("deleteFile", {hostname:moduleName, fileSelected:encodeURIComponent(fileSelected)});
     });
-    
+
+    $(document).on('click', ".btn_refresh", function(event){
+        console.log("refreshing known device list on the server");
+        socket.emit("refreshClients");
+    })
+
+    $(document).on('click', ".btn_power", function(event){
+        console.log("bye !");
+        socket.emit("shutdown");
+    })
     // update connected devices on server request
     socket.on('deviceList', function(data) {
         connectedDevices = Object.values(data);
@@ -177,10 +187,10 @@ $( document ).ready(function() {
         // updating modal content
         var deviceList = $('<ul id="wavDispatchList">');
         connectedDevices.forEach(function(device){
-            deviceList.append('<li class="checkbox moduleslist"><label><input type="checkbox" value="" data-moduleName='+device.name+'>'+device.name+'</label></li>"');
+            deviceList.append('<li class="checkbox moduleslist"><label data-moduleName="'+device.name+'"><input type="checkbox" value="" data-moduleName="'+device.name+'">'+device.name+'</label></li>');
         })
         deviceList.append("</ol>");
-        $("#wavDispatchList").replace(deviceList);
+        $("#wavDispatchList").replaceWith(deviceList);
         $("#wavDispatchName").text(filename);
         $("#wavDispatch").modal();
     });
@@ -188,8 +198,16 @@ $( document ).ready(function() {
     socket.on("successfullDispatch", function(data){
         console.log("successfully dispatched", data.filename, "to", data.hostname);
         if (data.filename == $("#wavDispatchName").text()) {
+            $('#wavDispatchList label[data-moduleName="'+data.hostname+'"]').css('color', 'green');
+            $('#wavDispatchList input[data-moduleName="'+data.hostname+'"]').attr("disabled", true);
+        }
+    })    
+
+    socket.on("dispatchFailed", function(data){
+        console.log("error dispatching", data.filename, "to", data.hostname);
+        if (data.filename == $("#wavDispatchName").text()) {
             console.log("selected label :",$('"#wavDispatchList label[data-moduleName='+data.hostname+']"'));
-            $('"#wavDispatchList label[data-moduleName='+data.hostname+']"').css('color', 'green');
+            $('"#wavDispatchList label[data-moduleName='+data.hostname+']"').css('color', 'red');
         }
     })
 

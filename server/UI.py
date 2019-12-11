@@ -25,13 +25,14 @@ from flask import Flask, g, render_template, redirect, request, url_for, copy_cu
 from flask_socketio import SocketIO, emit
 from flask_uploads import UploadSet, configure_uploads, UploadNotAllowed
 # ~ import os, logging, subprocess, eventlet
-import os, logging, subprocess, urllib.parse, glob
+import os, logging, subprocess, urllib.parse, glob, json
 import clients, OSCserver
 # ~ eventlet.monkey_patch() # needed to make eventlet work asynchronously with socketIO, 
 
 mainTitle = "GMEM || CIRVA || Réso-nance"
 midiFilesDir = "./midiFiles"
 audioFilesDir = "./tmp"
+uploadedFile = None
 
 if __name__ == '__main__':
     raise SystemExit("this file is made to be imported as a module, not executed")
@@ -71,8 +72,9 @@ def rte_trk(ID):
     
 # @app.route('/uploadAudio/<string:hostname>', methods=['GET', 'POST'])
 # def rte_uploadAudio(hostname):
-@app.route('/uploadAudio/', methods=['GET', 'POST'])
+@app.route('/uploadAudio', methods=['GET', 'POST'])
 def rte_uploadAudio():
+    global uploadedFile
     if request.method == 'POST' and 'audiofile' in request.files:
         # hostname = urllib.parse.unquote(hostname)
         # if hostname not in clients.knownClients or clients.knownClients[hostname]["connected"] == False and hostname != "server":
@@ -81,7 +83,7 @@ def rte_uploadAudio():
         try :
             filename = uploadSets["audio"].save(request.files['audiofile'])
             print("successfully uploaded audio "+filename)
-            socketio.emit("uploadSuccessful", filename, namespace="/home")
+            uploadedFile = filename
         except UploadNotAllowed:
             print("ERROR : this file is not an audio file ")
             socketio.emit("uploadNotAllowed")
@@ -90,7 +92,7 @@ def rte_uploadAudio():
 
 
 
-@app.route('/uploadMidi/', methods=['GET', 'POST'])
+@app.route('/uploadMidi', methods=['GET', 'POST'])
 def rte_uploadMidi():
     if request.method == 'POST' and "midifile" in request.files:
         # ~ deviceID = urllib.parse.unquote(hostname)
@@ -106,19 +108,17 @@ def rte_uploadMidi():
 
 @socketio.on('connect', namespace='/home')
 def onConnect():
+    global uploadedFile
     print("client connected, session id : "+request.sid)
     refreshDeviceList()
     sendMidiFileList()
+    if uploadedFile : 
+        socketio.emit("uploadSuccessful", uploadedFile, namespace="/home")
+        uploadedFile = None
 
 @socketio.on('disconnect', namespace='/home')
 def onDisconnect():
     print("client disconnected")
-
-@socketio.on('shutdown', namespace='/notifications')
-def sck_shutdown():
-    print("system shutdown called from frontend")
-    subprocess.Popen("sleep 3; sudo shutdown now", shell=True)
-    socketio.emit("redirect", "/shutdown", namespace='/notifications')
  
 @socketio.on('volChanged', namespace='/home')
 def setVolume(data):
@@ -175,13 +175,17 @@ def dispatchFileToClients(data):
     if os.path.isfile(audioFilesDir+"/"+filename) :
         for hostname in clientList : sendFileToClient(filename, hostname)
         os.remove(audioFilesDir+"/"+filename)
-        socketio.emit("successfullDispatch",{"filename":filename, "hostname":hostname}, namespace = "/home")
     else : print("ERROR dispatching %s to %s : file not found"%(filename, hostname))
 
 @socketio.on("refreshClients", namespace="/home")
 def refreshClients():
     print("asked from UI to refresh client list")
     clients.forgetAll(clearCache=True)
+
+@socketio.on("shutdown", namespace="/home")
+def shutdownFromUI():
+    print("shutdown called from frontend")
+    OSCserver.shutdown()
     
 # --------------- FUNCTIONS ----------------
 
@@ -211,10 +215,13 @@ def sendFileToClient(filename, hostname):
     tries = 0
     while tries < 4 :
         cmd = "sshpass -p raspberry scp -oStrictHostKeyChecking=no %s/%s pi@%s.local:/home/pi/client/wav/" % (audioFilesDir, filename, hostname)
+        os.system('ssh-keygen -f "/home/pi/.ssh/known_hosts" -R "'+hostname+'.local"')
         if os.system(cmd) == 0 : 
             print("succesfully dispatched %s to %s"%(filename, hostname))
+            socketio.emit("successfullDispatch",{"filename":filename, "hostname":hostname}, namespace = "/home")
             clients.sendOSC(hostname, "/getFileList") # to update the fileList on the UI
             return True
         else : tries+=1
     print("dispatching of %s to %s via sFTP failed 3 times in a row"%(filename, hostname))
+    socketio.emit("dispatchFailed",{"filename":filename, "hostname":hostname}, namespace = "/home")
     return False
