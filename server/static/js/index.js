@@ -294,14 +294,11 @@ $( document ).ready(function() {
         midiFiles.forEach(function(file){
             console.log("adding midi file", file)
             midiFilesHTML += '<h3>'+file+'<h3><button type="button" class="btn btn-primary" id="midiDel" name="'+file+'">suppr</button></li>';
-        )};
+        });
         console.log("dbg html", midiFilesHTML);
         $("#midiFileList").html(midiFilesHTML);
-        }))
-    }
+};
         
-});
-
 
 function show_module(module){
     console.log("displaying module", module);
@@ -352,3 +349,4 @@ function show_module(module){
 		//~ $("#"+module.name+" .ui-module-details .wav-list ul").append('<li><a href='+"#"+'>Norirnmurcol.wav</a></li><li><a href='+"#"+'>Thalogcollam.wav</a></li><li><a href='+"#"+'>Hellborcil.wav</a></li><li><a href='+"#"+'>Nircullam.wav</a></li><li><a href='+"#"+'>Hocelnarlysnar.wav</a></li><li><a href='+"#"+'>Lushelllosgymcul.wav</a></li><li><a href='+"#"+'>Nirthoyrnlem.wav</a></li><li><a href='+"#"+'>Lusholys.wav</a></li><li><a href='+"#"+'>Selmercolthasel.wav</a></li><li><a href='+"#"+'>Mararnmer.wav</a></li><li><a href='+"#"+'>Hurgember.wav</a></li><li><a href='+"#"+'>Urnmarsyllo.wav</a></li>');
 	}
 }
+});
