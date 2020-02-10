@@ -32,7 +32,7 @@ heartbeatThread = None
 peakDetectorThread = None
 JACKconnectionThread = None
 
-def exitCleanly():
+def exitCleanly(*args): #args may contain SIGnumber and other info when called from atexit
     if oscServerThread : 
         print("stopping the heartbeat")
         OSCserver.heartbeat = False

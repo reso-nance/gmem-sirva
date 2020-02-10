@@ -122,7 +122,7 @@ fi
 --------------setting up script autolaunch:--------------
 "
 echo"
-su pi -c '/usr/bin/python3 /home/pi/client/main.py'
+su pi -c 'cd /home/pi/client && python3 main.py&'
 ">>/etc/rc.local
 
 echo "

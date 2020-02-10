@@ -26,11 +26,11 @@ from flask_socketio import SocketIO, emit
 from flask_uploads import UploadSet, configure_uploads, UploadNotAllowed
 # ~ import os, logging, subprocess, eventlet
 import os, logging, subprocess, urllib.parse, glob, json
-import clients, OSCserver
+import clients, OSCserver, midiFile
 # ~ eventlet.monkey_patch() # needed to make eventlet work asynchronously with socketIO, 
 
 mainTitle = "GMEM || CIRVA || Réso-nance"
-midiFilesDir = "./midiFiles"
+midiFilesDir = midiFile.midiFolder
 audioFilesDir = "./tmp"
 uploadedFile = None
 

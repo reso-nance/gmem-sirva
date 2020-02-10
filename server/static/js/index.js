@@ -8,6 +8,7 @@ $( document ).ready(function() {
     $("#wavDispatch").hide()
     // pour test !!!
     updateDeviceList();
+
     
     // replace the midinote by an input tag
     $(document).on('click', '#midinote', function(event) {
@@ -277,6 +278,7 @@ $( document ).ready(function() {
         $("#devices-list").replaceWith(deviceList);
         //$("#status-list").replaceWith(statusList);
         console.log("updated devices list :", connectedDevices);
+        connectedDevices.forEach(function(device){show_module(device)})
     }
     
     function updateFileList(moduleName, fileList) {
