@@ -47,6 +47,7 @@ minDuration, maxDuration = 0.005, 0.1 # in seconds, exceeding 100ms for maxDurat
 recoverTime = 0.3 # in seconds, when maxDuration has been reach, wait for this amount of time to avoid overheat
 p, stream, spi = None, None, None
 solenoidPin = solenoid.pin
+solenoidPeakActivated = False # this variable allow us to see if the solenoid was activated by this peak detector or by OSC
 isListening = True # allow the thread to quit
 ALSAindex = None # index of the soundcard in the ALSA system to set input volumes
 rgbPins = (16, 18, 22)
@@ -55,7 +56,7 @@ redLedTimer = None # used to turn RGB on longer than the solenoid to stay visibl
  
 def listen() :
     # ~ global stream, p, spi, ALSAindex, meanPeaks
-    global stream, p, spi, ALSAindex
+    global stream, p, spi, ALSAindex, solenoidPeakActivated
     
     # Audio setup
     p=pyaudio.PyAudio()
@@ -66,8 +67,8 @@ def listen() :
     
     # GPIO setup
     GPIO.setmode(GPIO.BOARD)
-    GPIO.setup(solenoidPin, GPIO.OUT)
-    GPIO.output(solenoidPin, GPIO.LOW)
+    # GPIO.setup(solenoidPin, GPIO.OUT)
+    # GPIO.output(solenoidPin, GPIO.LOW)
     GPIO.setup(rgbPins, GPIO.OUT)
     GPIO.output(rgbPins, GPIO.LOW)
     GPIO.setwarnings(False)
@@ -90,18 +91,27 @@ def listen() :
             currentTime = datetime.now()
             if peak/chunkSize >= threeshold :
                 # if the solenoid is inactive, activate it
-                if not GPIO.input(solenoidPin) and (currentTime - lastTrigger).total_seconds() >= retrigger and not recovering :
+                if not solenoidPeakActivated and (currentTime - lastTrigger).total_seconds() >= retrigger and not recovering :
                     lastTrigger = currentTime
-                    GPIO.output(solenoidPin, GPIO.HIGH)
+                    solenoidPeakActivated = True
+                    solenoid.setHIGH()
+                    # GPIO.output(solenoidPin, GPIO.HIGH)
                 # if it has been fired for too long, shut it down to avoid overheating
-                if GPIO.input(solenoidPin) and (currentTime - lastTrigger).total_seconds() >= maxDuration :
-                    GPIO.output(solenoidPin, GPIO.LOW)
+                if solenoidPeakActivated and (currentTime - lastTrigger).total_seconds() >= maxDuration :
+                    # GPIO.output(solenoidPin, GPIO.LOW)
+                    solenoid.setLOW()
+                    print("set LOW from PEAK")
+                    solenoidPeakActivated = False
                     recovering = currentTime
             # when the audio data get under the threeshold and the solenoid is out, power it down
-            elif GPIO.input(solenoidPin) : GPIO.output(solenoidPin, GPIO.LOW)
+            # elif GPIO.input(solenoidPin) : GPIO.output(solenoidPin, GPIO.LOW)
+            elif solenoidPeakActivated :
+                solenoid.setLOW()
+                print("set LOW from PEAK")
+                solenoidPeakActivated = False
             # reset the recovery period
             elif recovering and (currentTime - recovering).total_seconds() > recoverTime : recovering = False
-            # ~ print("threeshold = %02f" % (peak/chunkSize))
+            #~ print("threeshold = %02f" % (peak/chunkSize))
             updateRGBled(peak)
         except KeyboardInterrupt : return
 
@@ -129,11 +139,11 @@ def readPotentiometers():
 
 # make the RGB led goes green when there is signal present, red when the solenoid is activated and off when under threeshold
 def updateRGBled(value) :
-    global redLedTimer # we need to maintain the red led on for longer than the solenoid or it won't be visible at all
+    global redLedTimer, solenoidPeakActivated # we need to maintain the red led on for longer than the solenoid or it won't be visible at all
     if redLedTimer :
         if (datetime.now() - redLedTimer).total_seconds() > .2 : redLedTimer = None # so 200ms it is
         else : return
-    if GPIO.input(solenoidPin) :
+    if solenoidPeakActivated :
         redLedTimer = datetime.now()
         rgb = (True, False, False)
     elif value > signalThreeshold : rgb = (False, True, False)

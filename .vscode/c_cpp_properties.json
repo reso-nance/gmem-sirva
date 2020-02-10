@@ -1,0 +1,34 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/home/Sonnenblumen/.arduino15/packages/esp8266/tools/**",
+                "/home/Sonnenblumen/.arduino15/packages/esp8266/hardware/esp8266/2.6.3/**",
+                "/home/Sonnenblumen/Programmes/arduino-1.8.9/tools/**",
+                "/home/Sonnenblumen/Programmes/arduino-1.8.9/hardware/arduino/avr/**",
+                "${workspaceFolder}/**",
+                "/home/Sonnenblumen/.arduino15/packages/arduino/hardware/avr/1.8.2/**",
+                "/home/Sonnenblumen/.arduino15/packages/arduino/tools/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64",
+            "forcedInclude": []
+        },
+        {
+            "name": "arduino",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}

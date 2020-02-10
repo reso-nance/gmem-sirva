@@ -29,14 +29,14 @@
         <button class="btn btn_power"></button>
         <button class="btn btn_refresh"></button>
         <form  class="btn_gestionfiles"  method=POST enctype=multipart/form-data action="/uploadMidi">
-          <label class="btn btn_wavefile desactivated statelist upload">
-              <input type="file"  name="midifile" style="display:none;">
+          <label class="btn btn_midifile desactivated statelist upload">
+              <input type="file"  name="midifile" style="display:none;" accept=".mid">
               <img src="static/imgs/btn_midifile.png" width=44 height=44>
           </label>
         </form>
         <form  class="btn_gestionfiles"  method=POST enctype=multipart/form-data action="/uploadAudio">
           <label class="btn btn_wavefile desactivated statelist upload">
-              <input type="file"  name="audiofile" style="display:none;">
+              <input type="file"  name="audiofile" style="display:none;" accept=".wav">
               <img src="static/imgs/btn_wavefile.png" width=44 height=44>
           </label>
         </form>
@@ -46,6 +46,9 @@
         
         <ol class="list-group cachelist" id="devices-list" >
         <!-- devices will be inserted here -->
+        </ol>
+        <ol class="midiFiles list cachelist" id="midiFileList">
+          <!-- midi files will be displayed here -->
         </ol>
         <!-- - btn a virer -->
       <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#wavDispatch">Open modal</button>

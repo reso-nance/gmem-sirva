@@ -84,7 +84,6 @@ $( document ).ready(function() {
         $(this).parent().addClass("selectedwave");
         // activate btns functions remove play delete
         parent_module.find('.btn_delete').css("opacity", "0.7");
-        
 
         //alert(file_name);
 
@@ -187,7 +186,7 @@ $( document ).ready(function() {
         // updating modal content
         var deviceList = $('<ul id="wavDispatchList">');
         connectedDevices.forEach(function(device){
-            deviceList.append('<li class="checkbox moduleslist"><label data-moduleName="'+device.name+'"><input type="checkbox" value="" data-moduleName="'+device.name+'">'+device.name+'</label></li>');
+            deviceList.append('<li class="checkbox moduleslist"><label data-moduleName="'+device.name+'"><input type="checkbox" value="" checked data-moduleName="'+device.name+'">'+device.name+'</label></li>');
         })
         deviceList.append("</ol>");
         $("#wavDispatchList").replaceWith(deviceList);
@@ -198,6 +197,7 @@ $( document ).ready(function() {
     socket.on("successfullDispatch", function(data){
         console.log("successfully dispatched", data.filename, "to", data.hostname);
         if (data.filename == $("#wavDispatchName").text()) {
+            $('#wavDispatchList label[data-moduleName="'+data.hostname+'"] input').hide();
             $('#wavDispatchList label[data-moduleName="'+data.hostname+'"]').css('color', 'green');
             $('#wavDispatchList input[data-moduleName="'+data.hostname+'"]').attr("disabled", true);
         }
@@ -284,10 +284,21 @@ $( document ).ready(function() {
         fileList.forEach(function(file){
             fileListHTML += '<li><a href=#>'+file+'</a></li>';
         });
+        console.log($("#"+moduleName+" .ui-module-details .wav-list ul"));
         $("#"+moduleName+" .ui-module-details .wav-list ul").empty().append(fileListHTML);
+        console.log($("#"+moduleName+"wavlist"));
     }
 
-
+    function displayMidiFiles(midiFiles){
+        var midiFilesHTML = "";
+        midiFiles.forEach(function(file){
+            console.log("adding midi file", file)
+            midiFilesHTML += '<h3>'+file+'<h3><button type="button" class="btn btn-primary" id="midiDel" name="'+file+'">suppr</button></li>';
+        )};
+        console.log("dbg html", midiFilesHTML);
+        $("#midiFileList").html(midiFilesHTML);
+        }))
+    }
         
 });
 
@@ -331,8 +342,8 @@ function show_module(module){
 		$("#"+module.name+" .volsout").append('<div class="bloc-vol" style=flex-grow:1><h2>transducteur out</h2><input class="slider" type="range" min=0 max=100 value='+module.volumes[2]+' data-type=2 data-moduleName="'+module.name+'" /></div>');
 		$("#"+module.name+" .volsout").append('<div class=bloc-vol style=flex-grow:1><h2>analog in </h2><input class="slider" type="range" min=0 max=100 value='+module.volumes[3]+' data-type=3 data-moduleName="'+module.name+'" /></div>');
 		// wave list
-		$("#"+module.name+" .ui-module-details").append('<div class=wav-list id=liste>');
-		$("#"+module.name+" .ui-module-details .wav-list").append('<ul class=col2></ul>');
+		$("#"+module.name+" .ui-module-details").append('<div class="wav-list" id="'+module.name+'wavlist">');
+		$("#"+module.name+" .ui-module-details .wav-list").append('<ul class="col2"></ul>');
         var fileList = "";
         module.fileList.forEach(function(file){
             fileList += '<li><a href=#>'+file+'</a></li>';
@@ -341,82 +352,3 @@ function show_module(module){
 		//~ $("#"+module.name+" .ui-module-details .wav-list ul").append('<li><a href='+"#"+'>Norirnmurcol.wav</a></li><li><a href='+"#"+'>Thalogcollam.wav</a></li><li><a href='+"#"+'>Hellborcil.wav</a></li><li><a href='+"#"+'>Nircullam.wav</a></li><li><a href='+"#"+'>Hocelnarlysnar.wav</a></li><li><a href='+"#"+'>Lushelllosgymcul.wav</a></li><li><a href='+"#"+'>Nirthoyrnlem.wav</a></li><li><a href='+"#"+'>Lusholys.wav</a></li><li><a href='+"#"+'>Selmercolthasel.wav</a></li><li><a href='+"#"+'>Mararnmer.wav</a></li><li><a href='+"#"+'>Hurgember.wav</a></li><li><a href='+"#"+'>Urnmarsyllo.wav</a></li>');
 	}
 }
-
-//~ function show_module(mymodule){
-	//~ // var index
-	//~ var module_index = mymodule.index();
-	//~ // get name
-	//~ var module_name = mymodule.find("a").text();
-	//~ // affichage
-	//~ if ( $( ".content #"+module_name ).length ) {
-		//~ $(".content #"+module_name).remove();
-	//~ } else
-	//~ {
-		//~ $(".content").append('<element class= ui-module-container id = '+module_name+'></element>');
-		//~ $("#"+module_name).append('<div class= ui-module-head></div>');
-		//~ $("#"+module_name+" .ui-module-head").append('<div class= ui-module-id></div>');
-		//~ $("#"+module_name+" .ui-module-head .ui-module-id").append('<div class= module_infos><h1>'+module_name+'</h1></div>');
-		//~ $("#"+module_name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = '+module_index+'><h3>'+module_name+' IPvar</h3></div>');
-		//~ $("#"+module_name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = midiinfo><h3>midinote </h3></div>');
-		//~ $("#"+module_name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = midinote><h3>11</h3></div>');
-		//~ $("#"+module_name+" .ui-module-head .ui-module-id").append('<div class=btns_up></div>');
-		//~ $("#"+module_name+" .ui-module-head .ui-module-id .btns_up").append('<button class=btn id=bplay></button>');
-		//~ $("#"+module_name+" #bplay").addClass("btn_play desactivated statelist");
-		//~ $("#"+module_name+" .ui-module-head .ui-module-id .btns_up").append('<button class=btn id=bstop></button>');
-		//~ $("#"+module_name+" #bstop").addClass("btn_stop desactivated statelist");
-		//~ $("#"+module_name+" .ui-module-head .ui-module-id .btns_down").append('<button class=btn id=badd></button>');
-		//~ $("#"+module_name+" #badd").addClass("btn_add desactivated statelist");
-		//~ $("#"+module_name+" .ui-module-head .ui-module-id .btns_down").append('<button class=btn id=bdelete></button>');
-		//~ $("#"+module_name+" #bdelete").addClass("btn_delete desactivated statelist");
-		//~ //
-		//~ $("#"+module_name).append('<div class=ui-module-details></div>');
-		//~ $("#"+module_name+" .ui-module-details").addClass("flex-container");
-		//~ $("#"+module_name+" .ui-module-details").append('<div class=ui_btn id=module'+module_index+'></div>');
-		//~ $("#"+module_name+" .ui-module-details .ui_btn").addClass("btn_unfold");
-		//~ $("#"+module_name+" .ui-module-details").append('<div class=ui-module-vols id=volsin style=flex-grow:1>');
-		//~ $("#"+module_name+" #volsin").append('<div class=bloc-vol id=audio_in'+module_index+' style=flex-grow:1><h2>micro in '+module_index+'</h2><input class=slider type=range min=0 max=100 /></div>');
-		//~ $("#"+module_name+" #volsin").append('<div class=bloc-vol id=analog_in'+module_index+' style=flex-grow:1><h2>analog in '+module_index+'</h2><input class=slider type=range min=0 max=100 /></div>');
-		//~ // volumes
-		//~ $("#"+module_name+" .ui-module-details").append('<div class=ui-module-vols id=volsout style=flex-grow:1>');
-		//~ $("#"+module_name+" #volsout").append('<div class=bloc-vol id=audio_in'+module_index+' style=flex-grow:1><h2>micro in '+module_index+'</h2><input class=slider type=range min=0 max=100 /></div>');
-		//~ $("#"+module_name+" #volsout").append('<div class=bloc-vol id=analog_in'+module_index+' style=flex-grow:1><h2>analog in '+module_index+'</h2><input class=slider type=range min=0 max=100 /></div>');
-		//~ // wave list
-		//~ $("#"+module_name+" .ui-module-details").append('<div class=wav-list id=liste>');
-		//~ $("#"+module_name+" .ui-module-details .wav-list").append('<ul class=col2></ul>');
-		//~ $("#"+module_name+" .ui-module-details .wav-list ul").append('<li><a href='+"#"+'>Norirnmurcol.wav</a></li><li><a href='+"#"+'>Thalogcollam.wav</a></li><li><a href='+"#"+'>Hellborcil.wav</a></li><li><a href='+"#"+'>Nircullam.wav</a></li><li><a href='+"#"+'>Hocelnarlysnar.wav</a></li><li><a href='+"#"+'>Lushelllosgymcul.wav</a></li><li><a href='+"#"+'>Nirthoyrnlem.wav</a></li><li><a href='+"#"+'>Lusholys.wav</a></li><li><a href='+"#"+'>Selmercolthasel.wav</a></li><li><a href='+"#"+'>Mararnmer.wav</a></li><li><a href='+"#"+'>Hurgember.wav</a></li><li><a href='+"#"+'>Urnmarsyllo.wav</a></li>');
-	//~ }
-//~ }
-
-/*
-// parse a plain note number (ex "G#3") and return it's midi note number
-function parsePlainNote(midiNote) {
-    midiNote = midiNote.replace(/\s/g, ''); // remove spaces
-    midiNote = midiNote.toUpperCase(); // convert to uppercase
-    
-    // generate an array regrouping every existing note name
-    var noteNames = ["A","B","C","D","E","F","G"];
-    const flats = ["D","E","G","A","B"];
-    const sharps = ["C", "D", "F", "G", "A"];
-    flats.forEach(function(note){noteNames.push(note+"B");})
-    sharps.forEach(function(note){noteNames.push(note+"#");})
-    noteNames.sort();
-    console.log("notenames",noteNames);
-    
-    // separate input into numbers and other characters
-    var chars = midiNote.slice(0, midiNote.search(/\d/));
-    var numbers = parseInt(midiNote.replace(chars, ''));
-    if (isNaN numbers) {
-        console.log("don't forget the octave number (ex:'C#3')");
-        return false;
-    }
-    else if (numbers < 0 || numbers > 9) {
-        console.log("octave must be in 0~9 range");
-        return false;
-    }
-    else if (!noteNames.includes(chars)) {
-        console.log("unknown note "+chars);
-        return false;
-    }
-    else if (chars in nameToNumber) return nameToNumber[chars]
-}
-*/

@@ -29,27 +29,41 @@
 #      pin 24 (GPIO08) ------> MCP3008 CS
 #  
 
-import RPi.GPIO as GPIO
-import time, spidev
-from threading import Thread
+# import RPi.GPIO as GPIO
+import time, subprocess
+from threading import Thread, Timer
 from datetime import datetime
 
 pin = 12
+gpio = 18 # pin 12 = BCM GPIO 18
 durationMin, durationMax = 10, 100 # in ms
 retrigger = 0.1 # in ms, act as a debounce
 recoverTime = 200 # in ms, when maxDuration has been reached, wait for this amount of time to avoid overheat
 
 # GPIO setup
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(pin, GPIO.OUT)
-GPIO.output(pin, GPIO.LOW)
+# GPIO.setmode(GPIO.BOARD)
+# GPIO.setup(pin, GPIO.OUT)
+# GPIO.output(pin, GPIO.LOW)
+subprocess.Popen("raspi-gpio set %i op" % gpio, shell=True)
+
+def setLOW() :
+    subprocess.Popen("raspi-gpio set %i dl" % gpio, shell=True)
+def setHIGH() : subprocess.Popen("raspi-gpio set %i dh" % gpio, shell=True)
+
+def isON():
+    raspiGpioResult = str(subprocess.run("raspi-gpio get %i" % gpio, shell=True, stdout=subprocess.PIPE))
+    if raspiGpioResult.count("level=1") : return True
+    elif raspiGpioResult.count("level=0") : return False
+    else : print("ERROR : unable to read solenoid GPIO status : \n"+raspiGpioResult)
 
 def setGPIOhigh(duration) :
-    duration = min(durationMax, max(durationMin, duration))
-    print("on", duration, "ms")
-    GPIO.output(pin, GPIO.HIGH)
-    time.sleep(duration/1000)# ms to seconds 
-    GPIO.output(pin, GPIO.LOW)
+    duration = min(durationMax, max(durationMin, duration)) 
+    print("solenoid activation (%ims)" % duration)
+    timer = Timer(duration/1000 -1, setLOW) # this function takes +- 1ms to run, "dl" = drive LOW 
+    # timer = Timer(duration/1000 -1, GPIO.output, [pin, GPIO.LOW]) # this function takes +- 1ms to run 
+    # GPIO.output(pin, GPIO.HIGH)
+    setHIGH()
+    timer.start()
     return
     
 def actuate(OSCaddress=None, OSCargs=None, tags=None, IPaddress=None, duration=None):
@@ -61,6 +75,7 @@ def actuate(OSCaddress=None, OSCargs=None, tags=None, IPaddress=None, duration=N
                 try : duration = float(OSCargs[0])
                 except : duration = durationMax
     Thread(target=setGPIOhigh, args=(duration,)).start() 
+    # setGPIOhigh(duration)
     
 
 def noteOn(velocity) :

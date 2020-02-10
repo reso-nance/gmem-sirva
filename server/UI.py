@@ -90,10 +90,9 @@ def rte_uploadAudio():
             return('<script>alert("Erreur : le fichier selectionné n\'est pas un fichier wav ou mp3");window.location = "/";</script>')
         return redirect('#')
 
-
-
 @app.route('/uploadMidi', methods=['GET', 'POST'])
 def rte_uploadMidi():
+    print("entering uploadMidi, request :", request.method)
     if request.method == 'POST' and "midifile" in request.files:
         # ~ deviceID = urllib.parse.unquote(hostname)
         try :
@@ -217,9 +216,11 @@ def sendFileToClient(filename, hostname):
         cmd = "sshpass -p raspberry scp -oStrictHostKeyChecking=no %s/%s pi@%s.local:/home/pi/client/wav/" % (audioFilesDir, filename, hostname)
         os.system('ssh-keygen -f "/home/pi/.ssh/known_hosts" -R "'+hostname+'.local"')
         if os.system(cmd) == 0 : 
-            print("succesfully dispatched %s to %s"%(filename, hostname))
-            socketio.emit("successfullDispatch",{"filename":filename, "hostname":hostname}, namespace = "/home")
+            print("successfully dispatched %s to %s"%(filename, hostname))
+            #FIXME for some reason this part of the function is never executed (os.system blocking ?)
+            print("asking %s for fileList" % hostname )
             clients.sendOSC(hostname, "/getFileList") # to update the fileList on the UI
+            socketio.emit("successfullDispatch",{"filename":filename, "hostname":hostname}, namespace = "/home")
             return True
         else : tries+=1
     print("dispatching of %s to %s via sFTP failed 3 times in a row"%(filename, hostname))

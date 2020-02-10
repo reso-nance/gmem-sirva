@@ -128,7 +128,7 @@
 	  width: 44px;
 	  height: 44px;
 	  left: 20px;
-	  background-image: url("../imgs/btn_wavefile.png");
+	  /* background-image: url("../imgs/btn_wavefile.png"); */
   }
   
   .btn_midifile{
@@ -136,7 +136,7 @@
 	  width: 44px;
 	  height: 44px;
 	  left: 20px;
-	  background-image: url("../imgs/btn_midifile.png");
+	  /* background-image: url("../imgs/btn_midifile.png"); */
   }
   
   .btn_playmidi{
