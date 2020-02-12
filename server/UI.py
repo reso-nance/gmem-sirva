@@ -101,6 +101,7 @@ def rte_uploadMidi():
         except UploadNotAllowed:
             print("ERROR : this file is not a midi file ")
             return('<script>alert("Erreur : le fichier selectionné n\'est pas un fichier midi");window.location = "/";</script>')
+        sendMidiFileList()
         return redirect('#')
     
 # --------------- SOCKET IO EVENTS ----------------
@@ -209,6 +210,7 @@ def sendMidiFileList():
     for ext in ("mid", "MID", "Mid") : midiFilesList += glob.glob(midiFilesDir+"/*."+ext)
     midiFilesList = [f.replace(midiFilesDir+"/", "") for f in midiFilesList] # remove dir name from fileList
     socketio.emit("midiFilesList", midiFilesList, namespace='/home')
+    print("sent MIDI files list :", midiFilesList)
 
 def sendFileToClient(filename, hostname):
     tries = 0

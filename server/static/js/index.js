@@ -1,12 +1,11 @@
 $( document ).ready(function() {
     var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + '/home')  
     var connectedDevices = [];
-    var testModule = {name:"testModule", volumes:[25,50,75,100], IP:"10.0.0.42", midiNote:60,status:'connecté', fileList:["testFile1.wav", "testFile2.wav", "testFile3.wav"], connected:true, lastSeen:"10/10/2019 09h23"}
-    var testModule2 = {name:"testModule2", volumes:[10,30,45,83], IP:"10.0.0.44", midiNote:53, status:'non-connecté',fileList:["testFile1.wav", "testFile2.wav", "testFile3.wav"], connected:false, lastSeen:"10/10/2019 09h13"}
-    connectedDevices.push(testModule);
-    connectedDevices.push(testModule2);
+    // var testModule = {name:"testModule", volumes:[25,50,75,100], IP:"10.0.0.42", midiNote:60,status:'connecté', fileList:["testFile1.wav", "testFile2.wav", "testFile3.wav"], connected:true, lastSeen:"10/10/2019 09h23"}
+    // var testModule2 = {name:"testModule2", volumes:[10,30,45,83], IP:"10.0.0.44", midiNote:53, status:'non-connecté',fileList:["testFile1.wav", "testFile2.wav", "testFile3.wav"], connected:false, lastSeen:"10/10/2019 09h13"}
+    // connectedDevices.push(testModule);
+    // connectedDevices.push(testModule2);
     $("#wavDispatch").hide()
-    // pour test !!!
     updateDeviceList();
 
     
@@ -85,9 +84,16 @@ $( document ).ready(function() {
         $(this).parent().addClass("selectedwave");
         // activate btns functions remove play delete
         parent_module.find('.btn_delete').css("opacity", "0.7");
+     });
 
-        //alert(file_name);
-
+     // SELECT FICHIER MIDI
+	$(document).on('click', '#midiFileList li a', function(event) {
+        var parent_module = ( $(this).closest('.menuMidiFiles'));
+ 		// remove class selected for all list
+ 		$(this).parents('ul').children('li').removeClass("selectedMIDI");
+        $(this).parent().addClass("selectedMIDI");
+        // activate btns functions remove play delete
+        //parent_module.find('.btn_delete').css("opacity", "0.7");
  	});	
         
 	// create module blocks when their <li> is clicked
@@ -120,7 +126,7 @@ $( document ).ready(function() {
      $(document).on('click', '#modalSend', function(event){
         var clientList = [];
         console.log( $('#wavDispatchList'))
-        $('#wavDispatchList input:checked').each(function() {
+        $('#wavDispatchList li input:checked').each(function() {
             clientList.push($(this).attr('data-moduleName'));
         });
         const filename = $("#wavDispatchName").text();
@@ -159,6 +165,26 @@ $( document ).ready(function() {
         console.log("bye !");
         socket.emit("shutdown");
     })
+
+    $(document).on('click', ".btn_playmidi", function(event){
+        let midiFile = $("#midiFileList li.selectedMIDI a").text();
+        console.log("playing midi", midiFile)
+        socket.emit("playMidi", encodeURIComponent(midiFile));
+    })
+
+    $(document).on('click', ".btn_stopmidi", function(event){
+        let midiFile = $("#midiFileList li.selectedMIDI a").text();
+        console.log("stopping midi", midiFile)
+        socket.emit("stopMidi", encodeURIComponent(midiFile));
+    })
+
+    $(document).on('click', ".btn_delmidi", function(event){
+        let midiFile = $("#midiFileList li.selectedMIDI a").text();
+        console.log("deleting midi file", midiFile);
+        socket.emit("deleteMidi", encodeURIComponent(midiFile));
+    })
+
+
     // update connected devices on server request
     socket.on('deviceList', function(data) {
         connectedDevices = Object.values(data);
@@ -181,16 +207,27 @@ $( document ).ready(function() {
         updateFileList(data.hostname, data.fileList)
     });
 
+    // update the list of midi files stored on the server on it's request
+    socket.on("midiFilesList", function(data){
+        console.log("received midi file list :", data);
+        midiListHTML = "";
+        data.forEach(midiFile => {
+            midiListHTML +='<li class="unselectedMIDI"><a>'+midiFile+'</a></li>';
+        });
+        $("#midiFileList").html(midiListHTML);
+        $("#midiFileList li:first").removeClass("unselectedMIDI");
+        $("#midiFileList li:first").addClass("selectedMIDI");
+    });
+
     // open modal when a wav file is received on the server side
     socket.on('uploadSuccessful', function(filename) {
         console.log("upload successful :", filename, "opening modal...")
         // updating modal content
-        var deviceList = $('<ul id="wavDispatchList">');
+        var deviceList ="";
         connectedDevices.forEach(function(device){
-            deviceList.append('<li class="checkbox moduleslist"><label data-moduleName="'+device.name+'"><input type="checkbox" value="" checked data-moduleName="'+device.name+'">'+device.name+'</label></li>');
+            deviceList+='<li><input class="form-check-input" type="checkbox" checked data-moduleName="'+device.name+'"><label class="form-check-label" data-moduleName="'+device.name+'">'+device.name+'</label></li>';
         })
-        deviceList.append("</ol>");
-        $("#wavDispatchList").replaceWith(deviceList);
+        $("#wavDispatchList").html(deviceList);
         $("#wavDispatchName").text(filename);
         $("#wavDispatch").modal();
     });
@@ -198,17 +235,17 @@ $( document ).ready(function() {
     socket.on("successfullDispatch", function(data){
         console.log("successfully dispatched", data.filename, "to", data.hostname);
         if (data.filename == $("#wavDispatchName").text()) {
-            $('#wavDispatchList label[data-moduleName="'+data.hostname+'"] input').hide();
-            $('#wavDispatchList label[data-moduleName="'+data.hostname+'"]').css('color', 'green');
-            $('#wavDispatchList input[data-moduleName="'+data.hostname+'"]').attr("disabled", true);
+            $('#wavDispatchList input[data-moduleName="'+data.hostname+'"]').hide();
+            // TODO : SEt to bold ?
+            $('#wavDispatchList label[data-moduleName="'+data.hostname+'"]').text(data.hostname+" : terminé");
         }
     })    
 
     socket.on("dispatchFailed", function(data){
         console.log("error dispatching", data.filename, "to", data.hostname);
         if (data.filename == $("#wavDispatchName").text()) {
-            console.log("selected label :",$('"#wavDispatchList label[data-moduleName='+data.hostname+']"'));
-            $('"#wavDispatchList label[data-moduleName='+data.hostname+']"').css('color', 'red');
+            $('#wavDispatchList label[data-moduleName="'+data.hostname+'"]').text(data.hostname+" : ECHEC");
+            $('#wavDispatchList label[data-moduleName="'+data.hostname+'"]').css('color', 'red');
         }
     })
 
@@ -286,20 +323,18 @@ $( document ).ready(function() {
         fileList.forEach(function(file){
             fileListHTML += '<li><a href=#>'+file+'</a></li>';
         });
-        console.log($("#"+moduleName+" .ui-module-details .wav-list ul"));
         $("#"+moduleName+" .ui-module-details .wav-list ul").empty().append(fileListHTML);
-        console.log($("#"+moduleName+"wavlist"));
     }
 
-    function displayMidiFiles(midiFiles){
-        var midiFilesHTML = "";
-        midiFiles.forEach(function(file){
-            console.log("adding midi file", file)
-            midiFilesHTML += '<h3>'+file+'<h3><button type="button" class="btn btn-primary" id="midiDel" name="'+file+'">suppr</button></li>';
-        });
-        console.log("dbg html", midiFilesHTML);
-        $("#midiFileList").html(midiFilesHTML);
-};
+//     function displayMidiFiles(midiFiles){
+//         var midiFilesHTML = "";
+//         midiFiles.forEach(function(file){
+//             console.log("adding midi file", file)
+//             midiFilesHTML += '<h3>'+file+'<h3><button type="button" class="btn btn-primary" id="midiDel" name="'+file+'">suppr</button></li>';
+//         });
+//         console.log("dbg html", midiFilesHTML);
+//         $("#midiFileList").html(midiFilesHTML);
+// };
         
 
 function show_module(module){

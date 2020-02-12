@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -7,14 +7,14 @@
     <meta name="description" content="serveur web du projet 'Paysage de Propagation'">
     <meta name="author" content="reso-nance.org">
 <!-- TODO 
-    <link rel="icon" href="../static/favicon.png">
+    <link rel="icon" href="../../static/favicon.png">
 -->
     <!-- Bootstrap CSS -->
-    <script src="static/js/jquery-3.3.1.min.js"></script>
-    <script src="static/js/popper.min.js"></script>
-    <script src="static/js/socket.io.min.js"></script>
-    <script src="static/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="static/css/custom.css">
+    <script src="../static/js/jquery-3.3.1.min.js"></script>
+    <script src="../static/js/popper.min.js"></script>
+    <script src="../static/js/socket.io.min.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="../static/css/custom.css">
     
     <title>Paysage de propagation</title>
     
@@ -24,74 +24,77 @@
     <!-- ////////////////////////////// LEFT PART ////////////////////////////////////////////////////////////////////// -->
     <div class="col menuLeft">
       <div class="logo"></div>
-      <h1>Modules de propagation</h1>
-      <div class="btn gestionFiles">
-        <button class="btn btn_power"></button>
-        <button class="btn btn_refresh"></button>
-        <form  class="btn_gestionfiles"  method=POST enctype=multipart/form-data action="/uploadMidi">
-          <label class="btn btn_midifile desactivated statelist upload">
-              <input type="file"  name="midifile" style="display:none;" accept=".mid">
-              <img src="static/imgs/btn_midifile.png" width=44 height=44>
-          </label>
-        </form>
-        <form  class="btn_gestionfiles"  method=POST enctype=multipart/form-data action="/uploadAudio">
-          <label class="btn btn_wavefile desactivated statelist upload">
+      <div class="gestionFiles">
+       
+        <a data-toggle="tooltip" title="tout éteindre"><button class="btn btn_power"></button></a>
+        <a data-toggle="tooltip" title="rafraichir les appareils"><button class="btn btn_refresh"></button></a>
+        <!-- <a href="#" data-toggle="tooltip" title="display all"><button class="btn btn_showall"></button></a> -->
+        <!-- - btn a virer -->
+
+        <!-- <a href="#" data-toggle="tooltip" title="uploader un fichier audio"><button class="btn btn_modal" data-toggle="modal" data-target="#wavDispatch"></button></a> -->
+        <form  class="btn btn_modal" id="form_audiofiles" data-toggle="tooltip" title="upload audio files" method=POST enctype=multipart/form-data action="/uploadAudio">
+            <label class="btn btn_wavefile desactivated statelist upload">
               <input type="file"  name="audiofile" style="display:none;" accept=".wav">
-              <img src="static/imgs/btn_wavefile.png" width=44 height=44>
-          </label>
+              <img src="../static/imgs/btn_wavefile.png" width=44 height=44>
+            </label>
         </form>
-        <button class="btn btn_playmidi"></button>
+
       </div>
       <div class="bloc-lists">
-        
+         <h1>Modules de propagation</h1>        
         <ol class="list-group cachelist" id="devices-list" >
         <!-- devices will be inserted here -->
         </ol>
-        <ol class="midiFiles list cachelist" id="midiFileList">
-          <!-- midi files will be displayed here -->
-        </ol>
-        <!-- - btn a virer -->
-      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#wavDispatch">Open modal</button>
+      </div>
+    </div><!-- end leftpart -->
+    <!-- ////////////////////////////// MIDI LIST PART ////////////////////////////////////////////////////////////////////// -->
+    <div class="col menuMidiFiles">
+      <div class="header_btn_files"></div>
+      <form  class="btn_gestionfiles"  method=POST enctype=multipart/form-data action="/uploadMidi">
+        <label class="btn btn_midifile desactivated statelist upload">
+            <input type="file"  name="midifile" style="display:none;" accept=".mid">
+            <img src="static/imgs/btn_midifile.png" width=44 height=44>
+        </label>
+      </form>
+      <a href="#" data-toggle="tooltip" title="jouer le midi sélectionné"><button class="btn btn_playmidi"></button></a>
+      <a href="#" data-toggle="tooltip" title="stopper le midi sélectionné"><button class="btn btn_stopmidi"></button></a>
+      <a href="#" data-toggle="tooltip" title="supprimer le midi sélectionné"><button class="btn btn_delmidi"></button></a>
+      <div class="bloc-lists"> 
+      <h1>Fichiers midi</h1>
+        <ul class="list-group midi-list cachelist" id="midiFileList" >
+        <!-- midi files will be inserted here -->
+        <h3>Aucun fichier midi</h3>
+        </ul>
       </div>
     </div><!-- end leftpart -->
 
-    <!-- ////////////////////////////// RIGHT PART ///////////////////////////////////////////////////////////////////// -->
+    <!-- ////////////////////////////// AUDIO PART ///////////////////////////////////////////////////////////////////// -->
     <div class="col ContentRight">
         <div class="content"></div>
     </div><!-- end rightpart -->
     <!-- The Modal -->
-    <div class="modal" id="wavDispatch">
+    <div class="modal" id="wavDispatch"> 
       <div class="modal-dialog">
         <div class="modal-content">
-
-        <!-- Modal Header -->
-        <div class="modal-header">
-          <h1 class="modal-title">Transfert de : <span id='wavDispatchName'>Fusce.wav</span></h1>
+          <div class="modal-header">   
+            <div class="bloc-lists">
+            <h1>Fichiers AUDIO</h1> 
+              <h2>Transférer <span id="wavDispatchName"></span> vers :</h2>
+                <ul class="list-group cachelist col2" id="wavDispatchList" >
+                  <h3>Aucun appareil connecté</h3>
+                </ul>
+                <a data-toggle="tooltip" title="dispatcher sur les appareils sélectionnés"><button id="modalSend" class="btn btn_wavdispatch"></button></a>
+                <a data-dismiss="modal" title="fermer cette fenêtre"><button class="btn btn_closemodal"></button></a>
+            </div>
+          </div> 
         </div>
-
-        <!-- Modal body -->
-        <div class="modal-body">
-          <div class="listemodal">
-            <ul id="wavDispatchList">  
-            </ul>
-          </div>
-         </div> 
-        </div>
-      </div> 
-      
-
-        <!-- Modal footer -->
-        <div class="modal-footer">
-          <!-- <button type="button" class="btn btn-danger pull-right" data-dismiss="modal" id="modalSend">Transferer</button> -->
-          <button type="button" class="btn btn-danger pull-right" id="modalSend">Transferer</button>
-        </div>
-
-        </div>
-      </div>
+      </div>    
     </div>
+    </div>
+ 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script type= "text/javascript" src="static/js/index.js"></script>
+    <script type= "text/javascript" src="../static/js/index.js"></script>
 
 
   </body>

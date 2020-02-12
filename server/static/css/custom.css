@@ -26,12 +26,16 @@
   }
   
   body {
-	
+	background-color: #333;
 	font-family: 'Roboto', sans-serif;
-	color: #333;
+	color: #aaa;
 	margin: 0;
 	padding: 0;
   }
+
+  /* tool type -------------------------------------------------------------------*/
+
+
   
   /* COLONNES  --------------------------------------------------------------------*/
   
@@ -47,13 +51,34 @@
   }
   
   .menuLeft{
-	  background-color: #1a1a1a;
-	  width: 12%;
-	  min-width: 320px;
+  	background-color: #000;
+  	width: 12%;
+  	min-width: 320px;
+
+  }
+
+  .menuMidiFiles{
+  	background-color: #111;
+	width: 12%;
+	min-width: 320px;
+  }
+
+  .header_btn_files{
+  	padding-top: 115px;
+  	width: 100%;
+  	height: 50px;
+  	background-color: #333;
   }
   
   .menuLeft h1{
-	  padding-left: 30px;
+  	font-size: 0.75em;
+	text-transform: uppercase;
+  }
+
+  .menuMidiFiles h1, .modal-header h1{
+  	color: #666;
+  	font-size: 0.75em;
+	text-transform: uppercase;
   }
   
   
@@ -71,17 +96,27 @@
   .logo{
 	  width: 320px;
 	  height: 120px;
-	  background-image: url("../imgs/propagation.png");
+	  background-image: url("../imgs/propagation2.png");
+  }
+
+  .midihead{
+	  width: 320px;
+	  height: 120px;
+	  background-image: url("../imgs/midihead.png");
   }
   
   .btn_gestionfiles{
-	  display: inline-block;
-  
+  	width: 44px;
+	display: inline-block;
   }
-  
-  .gestionFiles{
-	  padding-top: 15px;
-  }
+
+#form_midifiles{
+	float: right;
+}
+
+#form_audiofiles{
+	float: right;
+}
   
   .inputfiles{
 	  opacity: 0.7;	
@@ -93,15 +128,21 @@
   cursor:pointer;
   }
   
+button{
+	padding:0;
+}
+
   .btn{
-	  border: none;
-	  cursor: pointer;
-		opacity: 0.7;
-		-webkit-transition: .2s;
-		transition: opacity .2s;
-		margin-right: 5px;
-		padding-left: 10px;
+  	width: 44px;
+  	height: 44px;
+	border: none;
+	cursor: pointer;
+	opacity: 0.5;
+	-webkit-transition: .2s;
+	transition: opacity .1s;
   }
+
+
   .btn:hover{
 	  opacity: 1;
   }
@@ -110,59 +151,104 @@
 	  position: relative;
 	  width: 44px;
 	  height: 44px;
-	  left: 20px;
 	  background-image: url("../imgs/btn_power.png");
   }
-  
+
+
   .btn_refresh{
 	  position: relative;
 	  width: 44px;
 	  height: 44px;
-	  left: 20px;
 	  background-image: url("../imgs/btn_refresh.png");
   }
   
-  
-  .btn_wavefile{
+  .btn_showall{
 	  position: relative;
 	  width: 44px;
 	  height: 44px;
-	  left: 20px;
+	  background-image: url("../imgs/btn_showall.png");  	
+  }
+  
+  .btn_wavefile{
+	  width: 44px;
+	  height: 44px;
 	  /* background-image: url("../imgs/btn_wavefile.png"); */
+  }
+
+  .btn_wavdispatch{
+	  width: 44px;
+	  height: 44px;
+	  float: right;
+	  background-image: url("../imgs/btn_wavdispatch.png");
+  }
+
+  .btn_closemodal{
+	  width: 44px;
+	  height: 44px;
+	  float: left;
+	  background-image: url("../imgs/btn_closemodal.png");
   }
   
   .btn_midifile{
 	  position: relative;
 	  width: 44px;
 	  height: 44px;
-	  left: 20px;
+
 	  /* background-image: url("../imgs/btn_midifile.png"); */
   }
   
   .btn_playmidi{
-	  position: relative;
+	  float: left;
+	  margin-right: 4px; 
 	  width: 44px;
 	  height: 44px;
-	  left: 20px;
 	  background-image: url("../imgs/btn_playmidi.png");
+  }  
+
+  .btn_stopmidi{
+	  float: left;
+	  margin-right: 4px; 
+	  width: 44px;
+	  height: 44px;
+	  background-image: url("../imgs/btn_stopmidi.png");
+  }  
+
+  .btn_delmidi{
+	  float: left;
+	  margin-right: 4px; 
+	  width: 44px;
+	  height: 44px;
+	  background-image: url("../imgs/btn_deletemidi.png");
   }
+
+  /* .btn_playmidi:hover{
+  	content: 'Text affiche lors du hover';
+  } */
   
   .bloc-lists{
-	  margin-left: 30px;
+  	margin-left: 51px;
   }
   
   .list-group{
   
 	  font-size: .75em;
-	  padding: 10px 0;
+	  padding: 42px 0;
 	  list-style-type: none;
   }
-  
-  .cachelist >li > a{
-	  text-transform: uppercase;
+
+  .cachelist >li{
+  	margin-bottom: 15px;
+  }
+ 
+ #devices-list >li >a{
+ 	text-transform: uppercase;
+ }
+
+  .cachelist >li >a{
 	  font-weight: 400;
 	  text-decoration: none;
 	  color: #ccc;
+	  padding-bottom: 7px;
   }
   
   .cachelist >li > a:Hover{
@@ -447,6 +533,15 @@
 	  background-color: #ccffcc;
   }
   
+  .  
+  .unselectedMIDI{
+	  background-color: #000;
+  }
+  
+  .selectedMIDI{
+	  background-color: #ccffcc;
+  }
+  
   .activated{
 	  opacity: .7;
   }
@@ -460,28 +555,45 @@
   #wavDispatch{
 	  display: none;
 	  position: absolute;
-	  left: 321px;
-	  
+	  top:165px;
+	  left: 640px;
+	  width: 640px;
 	  color: #fff;
 	  margin: 0;
 	  padding: 0;
 	  font-weight: 400;
-	  background-color: rgba(26,26,26,.9) !important;
+	  background-color: rgb(34,34,34);
   }
   
   #wavDispatch h1{
-  
-	  color: #333;
+	  color: #666;
+	  text-transform: uppercase;
+	 
+  }
+
+  #wavDispatch h2{
+  	font-size: 0.7em;
+	  color: #aaa;
+	  text-transform: none;
+	 }
+
+  #wavDispatch h2 span{
+  	 color :#c8fac8;
   }
   
   #wavDispatch #selectedwavefile{
 	  color: #ccffcc;
   }
-  
-  
-  .modal-dialog{
-	  padding: 20px;
+
+#wav-list{
+	margin-bottom: 45px;
+}
+
+#wav-list li{
+  	padding:10px 3px 0 0;
   }
+  
+  
   
   
   .moduleslist{
@@ -502,3 +614,16 @@
   .modal-footer{
 	  
   }
+
+input[type=checkbox]
+{
+  /* Double-sized Checkboxes */
+  -ms-transform: scale(1.5); /* IE */
+  -moz-transform: scale(1.5); /* FF */
+  -webkit-transform: scale(1.5); /* Safari and Chrome */
+  -o-transform: scale(1.5); /* Opera */
+  transform: scale(1.5);
+  margin-right: 10px;
+}
+
+/* Might want to wrap a span around your checkbox text */

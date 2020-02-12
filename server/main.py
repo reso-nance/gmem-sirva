@@ -38,6 +38,8 @@ def exitCleanly(*args):
     clients.disconnectedThread = False
     print("exiting OSCserver thread")
     OSCserver.listenToOSC = False
+    print("cleaning temporary folder")
+    os.system("rm -f " + UI.audioFilesDir + "/*")
     raise SystemExit
 
 if __name__ == '__main__':
