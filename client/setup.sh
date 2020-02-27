@@ -110,10 +110,7 @@ kernel=${zImage name}
 device_tree=bcm2710-rpi-3-b.dtb
 ">>/boot/config.txt
     echo "  patching cmdline.txt to ensure USB and ETH interrupts will not break..."
-    # fixme
-    #~ echo "dwc_otg.lpm_enable=0 dwc_otg.fiq_enable=0 dwc_otg.fiq_fsm_enable=0 dwc_otg.nak_holdoff=0 console=serial0,115200 console=tty1 root=PARTUUID=1b37641c-02 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait
-    #~ ">/boot/cmdline.txt
-    
+    sed -i '1s/^/dwc_otg.lpm_enable=0 dwc_otg.fiq_enable=0 dwc_otg.fiq_fsm_enable=0 dwc_otg.nak_holdoff=0  /' /boot/cmdline.txt    
     echo "
 ----------finished installing realtime kernel :----------
 "
@@ -121,7 +118,7 @@ fi
     echo "
 --------------setting up script autolaunch:--------------
 "
-echo"
+echo "
 su pi -c 'cd /home/pi/client && python3 main.py&'
 ">>/etc/rc.local
 

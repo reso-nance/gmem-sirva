@@ -44,8 +44,8 @@ inputs = {"microphone":"system:capture_1", "analogIN": "system:capture_2"}
 outputs = {"transducer":"system:playback_1", "analogOUT":"system:playback_2"}
 alsaControls = {"microphone": "'Mic',0", "analogIN":"'Mic',1", "transducer":"'UMC202HD 192k Output',0", "analogOUT":"'UMC202HD 192k Output',1"}
 # ~ alsaOutputVolumes = {"transducer":0, "analogOUT":0} # outputs volumes are stored here to be restored when unmuted since these two channels are linked in alsa (left-right)
-jackParameters={"soundcard":soundcardName, "sampleRate":96000, "bufferSize":256, "bufferCount":3, "priority":80, "timeout":2000, "maxClients":2048}
-# ~ jackParameters={"soundcard":soundcardName, "sampleRate":48000, "bufferSize":128, "bufferCount":2, "priority":80, "timeout":2000, "maxClients":2048}
+#jackParameters={"soundcard":soundcardName, "sampleRate":96000, "bufferSize":256, "bufferCount":3, "priority":80, "timeout":2000, "maxClients":2048}
+jackParameters={"soundcard":soundcardName, "sampleRate":48000, "bufferSize":256, "bufferCount":2, "priority":80, "timeout":2000, "maxClients":2048}
 
 
 def init(soundcard, sampleRate, bufferSize, bufferCount, priority, timeout, maxClients):

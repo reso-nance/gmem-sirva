@@ -39,7 +39,6 @@ def exitCleanly(*args): #args may contain SIGnumber and other info when called f
         heartbeatThread.join()
         print("closing the OSC server")
         OSCserver.runServer = False
-        oscServerThread.join()
     if peakDetector :
         print("closing the peak detector")
         peakDetector.isListening = False

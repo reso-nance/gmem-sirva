@@ -44,7 +44,7 @@ sampleRate = 44100
 chunkSize = 512 # number of samples averaged
 retrigger = 0.001 # in seconds, act as a debounce
 minDuration, maxDuration = 0.005, 0.1 # in seconds, exceeding 100ms for maxDuration may break the solenoid
-recoverTime = 0.3 # in seconds, when maxDuration has been reach, wait for this amount of time to avoid overheat
+recoverTime = 0.03 # in seconds, when maxDuration has been reach, wait for this amount of time to avoid overheat
 p, stream, spi = None, None, None
 solenoidPin = solenoid.pin
 solenoidPeakActivated = False # this variable allow us to see if the solenoid was activated by this peak detector or by OSC
@@ -89,6 +89,7 @@ def listen() :
             data = np.fromstring(stream.read(chunkSize, exception_on_overflow = False),dtype=np.int16)
             peak=np.average(np.abs(data))*2
             currentTime = datetime.now()
+            # print("actu", peak/chunkSize, "seuil", threeshold)
             if peak/chunkSize >= threeshold :
                 # if the solenoid is inactive, activate it
                 if not solenoidPeakActivated and (currentTime - lastTrigger).total_seconds() >= retrigger and not recovering :
@@ -107,11 +108,11 @@ def listen() :
             # elif GPIO.input(solenoidPin) : GPIO.output(solenoidPin, GPIO.LOW)
             elif solenoidPeakActivated :
                 solenoid.setLOW()
-                print("set LOW from PEAK")
+                # print("set LOW from PEAK")
                 solenoidPeakActivated = False
             # reset the recovery period
             elif recovering and (currentTime - recovering).total_seconds() > recoverTime : recovering = False
-            #~ print("threeshold = %02f" % (peak/chunkSize))
+            # ~ print("threeshold = %02f" % (peak/chunkSize))
             updateRGBled(peak)
         except KeyboardInterrupt : return
 

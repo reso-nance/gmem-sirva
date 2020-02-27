@@ -11,7 +11,7 @@ $( document ).ready(function() {
     
     // replace the midinote by an input tag
     $(document).on('click', '#midinote', function(event) {
-        const hostname = ($(event.target).children('h3').text());
+        const hostname = $(event.target).attr("data-hostname")
         var original_text = $(this).text();
         var new_input = $('<input class="midinote-editor" id="'+hostname+'" data-original="'+original_text+'">');
         new_input.val(original_text);
@@ -28,10 +28,10 @@ $( document ).ready(function() {
         const midiNote = getMidiNoteNumber(hostname, new_input);
         // if the entered midi note is valid, get it's number and send it to the server
         if (midiNote) {
-            updated_text.html('<h3>'+new_input+'</h3>');
+            updated_text.html('<h3 data-hostname="'+hostname+'">'+new_input+'</h3>');
             socket.emit("midiNoteChanged", {hostname:encodeURIComponent(hostname), midinote:midiNote});
         }
-        else updated_text.html('<h3>'+originalText+'</h3>');
+        else updated_text.html('<h3 data-hostname="'+hostname+'">'+originalText+'</h3>');
         $(this).replaceWith(updated_text);
 	});
     
@@ -348,9 +348,9 @@ function show_module(module){
 		$("#"+module.name).append('<div class= ui-module-head></div>');
 		$("#"+module.name+" .ui-module-head").append('<div class= ui-module-id></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class="module_infos module-name"><h1>'+module.name+'</h1></div>');
-		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos><h3>IP '+module.IP+'</h3></div>');
-		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = midiinfo><h3>notemidi </h3></div>');
-		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class= module_infos id = midinote><h3>'+module.midiNote+'</h3></div>');
+		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class="module_infos"><h3>IP '+module.IP+'</h3></div>');
+		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class="module_infos" id="midiinfo"><h3>notemidi </h3></div>');
+		$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class="module_infos" id="midinote"><h3 data-hostname="'+module.name+'">'+module.midiNote+'</h3></div>');
 	       // btns play stop
     	$("#"+module.name+" .ui-module-head .ui-module-id").append('<div class=btns_up></div>');
 		$("#"+module.name+" .ui-module-head .ui-module-id .btns_up").append('<button class=btn id=bplay data-modulename="'+module.name+'"></button>');

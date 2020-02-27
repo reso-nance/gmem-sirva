@@ -32,7 +32,7 @@
         <!-- - btn a virer -->
 
         <!-- <a href="#" data-toggle="tooltip" title="uploader un fichier audio"><button class="btn btn_modal" data-toggle="modal" data-target="#wavDispatch"></button></a> -->
-        <form  class="btn btn_modal" id="form_audiofiles" data-toggle="tooltip" title="upload audio files" method=POST enctype=multipart/form-data action="/uploadAudio">
+        <form  class="btn btn_modal" id="form_audiofiles" data-toggle="tooltip" title="téléverser un fichier audio" method=POST enctype=multipart/form-data action="/uploadAudio">
             <label class="btn btn_wavefile desactivated statelist upload">
               <input type="file"  name="audiofile" style="display:none;" accept=".wav">
               <img src="../static/imgs/btn_wavefile.png" width=44 height=44>
@@ -51,7 +51,7 @@
     <div class="col menuMidiFiles">
       <div class="header_btn_files"></div>
       <form  class="btn_gestionfiles"  method=POST enctype=multipart/form-data action="/uploadMidi">
-        <label class="btn btn_midifile desactivated statelist upload">
+        <label class="btn btn_midifile desactivated statelist upload" data-toggle="tooltip" title="téléverser un fichier midi">
             <input type="file"  name="midifile" style="display:none;" accept=".mid">
             <img src="static/imgs/btn_midifile.png" width=44 height=44>
         </label>
